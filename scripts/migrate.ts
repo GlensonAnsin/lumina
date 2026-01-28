@@ -9,28 +9,21 @@ import configList from '../src/config/database';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/**
- * Helper: Create the database if it doesn't exist.
- * Mimics Laravel's behavior.
- */
 const createDatabaseIfNotExists = async () => {
-  // ✅ FIX: Read config directly from the file source
   const env = process.env.NODE_ENV || 'development';
   const config = (configList as any)[env];
   const dbName = config.database;
 
-  // 1. Create a temporary connection without a specific database
-  // We connect to the server (localhost), not the DB ('lumina'), so we can run CREATE DATABASE
+  // Create a temporary connection without a specific database
   const tempSequelize = new Sequelize('', config.username, config.password, {
     host: config.host,
-    dialect: config.dialect, // Now this is guaranteed to exist!
+    dialect: config.dialect,
     logging: false,
   });
 
   try {
-    // 2. Run the Create SQL
+    // Run the Create SQL
     await tempSequelize.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
-    // Optional: console.log(`✅ Database '${dbName}' checked/created.`);
   } catch (error) {
     console.error('❌ Failed to create database:', error);
     process.exit(1);
@@ -40,7 +33,7 @@ const createDatabaseIfNotExists = async () => {
 };
 
 const runMigrations = async () => {
-  // STEP 0: Auto-create DB before connecting
+  // Auto-create DB before connecting
   await createDatabaseIfNotExists();
 
   const sequelize = db.sequelize;
@@ -56,10 +49,8 @@ const runMigrations = async () => {
 
   const umzug = new Umzug({
     migrations: {
-      glob: 'src/database/migrations/*.js', // Pattern to find migration files
-      // If you want to support .ts migrations, change to: 'src/database/migrations/*.{js,ts}'
+      glob: 'src/database/migrations/*.js',
       resolve: ({ name, path, context }) => {
-        // Dynamic import for ESM migration files
         return {
           name,
           up: async () => {
@@ -78,7 +69,6 @@ const runMigrations = async () => {
     logger: console,
   });
 
-  // Check command line arguments
   const command = process.argv[2];
 
   try {
@@ -92,7 +82,7 @@ const runMigrations = async () => {
       console.log('✅ Rollback complete.');
     } else if (command === 'reset') {
       console.log('💥 Resetting Database...');
-      await umzug.down({ to: 0 }); // Undo all
+      await umzug.down({ to: 0 });
       console.log('✅ Database reset complete.');
     } else {
       console.log(`
