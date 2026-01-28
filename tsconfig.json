@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    /* Base Options */
+    "target": "ES2022",                                /* Set to ES2022 to support top-level await */
+    "module": "NodeNext",                              /* Crucial for ESM ("type": "module") support */
+    "moduleResolution": "NodeNext",                    /* strictly resolve modules like Node.js does */
+    "esModuleInterop": true,                           /* Allows importing CommonJS modules (like 'path') comfortably */
+    "forceConsistentCasingInFileNames": true,          /* Prevents issues between Windows/Mac file systems */
+    "strict": true,                                    /* Enable strict type-checking */
+    "skipLibCheck": true,                              /* Skip type checking of declaration files */
+
+    /* Output Options */
+    "outDir": "./dist",                                /* Where compiled .js files go */
+    "rootDir": "./src",                                /* Where your .ts source files are */
+    "removeComments": true,                            /* Remove comments from the build to save space */
+    
+    /* Experimental Options (Helpful for Decorators if you use them later) */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src/**/*"],                             /* Compile everything in src */
+  "exclude": ["node_modules", "**/*.spec.ts"]          /* Don't compile libraries or tests */
+}

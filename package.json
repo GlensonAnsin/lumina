@@ -1,0 +1,40 @@
+{
+  "name": "lumina",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.ts",
+  "scripts": {
+    "dev": "nodemon --exec tsx src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "tsx scripts/migrate.ts up",
+    "migrate:undo": "tsx scripts/migrate.ts down",
+    "migrate:reset": "tsx scripts/migrate.ts reset",
+    "db:seed": "tsx scripts/seed.ts"
+  },
+  "author": "Ghost",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@faker-js/faker": "^10.2.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "mysql2": "^3.16.2",
+    "nodemon": "^3.1.11",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.5",
+    "umzug": "^3.8.2",
+    "winston": "^3.19.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
