@@ -24,6 +24,7 @@ app.use(helmet());             // Security Headers
 app.use(cors());               // Cross-Origin Resource Sharing
 app.use(express.json());       // Parse JSON bodies (API)
 app.use(express.urlencoded({ extended: true })); // Parse Form bodies
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // Serve Static Files
 app.use(express.static(path.join(__dirname, '../public')));

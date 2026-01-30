@@ -1,10 +1,29 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { Model, DataTypes, Sequelize, Optional } from 'sequelize';
 
-class User extends Model {
-  public id!: number;
-  public name!: string;
-  public email!: string;
-  public password!: string;
+interface UserAttributes {
+  id: number;
+  firstname: string;
+  lastname: string;
+  email: string;
+  password: string;
+  role: string;
+  is_deleted: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'created_at' | 'updated_at'> {}
+
+class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+  declare id: number;
+  declare firstname: string;
+  declare lastname: string;
+  declare email: string;
+  declare password: string;
+  declare role: string;
+  declare is_deleted: boolean;
+  declare created_at: Date;
+  declare updated_at: Date;
 
   static initModel(sequelize: Sequelize) {
     User.init(
@@ -34,10 +53,12 @@ class User extends Model {
         role: {
           type: DataTypes.STRING,
           allowNull: false,
+          defaultValue: 'user',
         },
         is_deleted: {
           type: DataTypes.BOOLEAN,
           allowNull: false,
+          defaultValue: false,
         },
       },
       {
@@ -45,6 +66,7 @@ class User extends Model {
         modelName: 'User',
         tableName: 'users',
         timestamps: true,
+        underscored: true,
       }
     );
   }

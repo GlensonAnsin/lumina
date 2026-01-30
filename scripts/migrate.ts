@@ -1,13 +1,8 @@
 import { Umzug, SequelizeStorage } from 'umzug';
 import db from '../src/models/index';
 import { Sequelize } from 'sequelize';
-import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { pathToFileURL } from 'url';
 import configList from '../src/config/database';
-
-// Recreate __dirname for ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const createDatabaseIfNotExists = async () => {
   const env = process.env.NODE_ENV || 'development';

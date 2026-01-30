@@ -9,11 +9,12 @@ export default class DatabaseSeeder {
       await UserFactory.create({
         email: 'admin@lumina.com',
         firstname: 'Admin',
+        lastname: 'Lumina',
         role: 'admin',
       });
 
-      // Create 50 random users
-      await UserFactory.createMany(50);
+      // Create random users
+      await UserFactory.createMany(20);
 
       console.log('Seeding complete!');
     } catch (error) {
