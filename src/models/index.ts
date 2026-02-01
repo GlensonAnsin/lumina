@@ -1,67 +1,88 @@
 import fs from 'fs';
 import path from 'path';
 import { Sequelize } from 'sequelize';
-import process from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import configList from '../config/database.js';
 
-// Recreate __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load Config
-const env = process.env.NODE_ENV || 'development';
-const config = (configList as any)[env];
+class Database {
+  public sequelize: Sequelize;
+  public models: any = {};
 
-// Debugging Block
-if (!config) {
-  console.error('❌ Fatal Error: Could not find database config.');
-  console.error(`   Looking for environment: "${env}"`);
-  console.error('   Loaded Config:', JSON.stringify(configList, null, 2));
-  process.exit(1);
-}
+  constructor() {
+    const env = process.env.NODE_ENV || 'development';
+    const config = (configList as any)[env];
 
-const db: any = {};
-let sequelize: Sequelize;
+    if (!config) {
+      console.error(`❌ Fatal Error: Database config for "${env}" not found.`);
+      process.exit(1);
+    }
 
-// Initialize Sequelize
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable] as string, config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+    // Initialize Sequelize
+    this.sequelize = new Sequelize(
+      config.database, 
+      config.username, 
+      config.password, 
+      config
+    );
+  }
 
-const basename = path.basename(__filename);
+  /**
+   * Connect to DB and Load Models
+   */
+  public async connect() {
+    try {
+      // 1. Authenticate Connection
+      await this.sequelize.authenticate();
+      console.log('✅ Database connection established.');
 
-// Read Directory
-const files = fs.readdirSync(__dirname).filter((file) => {
-  return (
-    file.indexOf('.') !== 0 &&
-    file !== basename &&
-    (file.slice(-3) === '.ts' || file.slice(-3) === '.js')
-  );
-});
+      // 2. Load Models Dynamically
+      await this.loadModels();
+      
+      // 3. Setup Associations
+      this.associateModels();
+      
+    } catch (error) {
+      console.error('❌ Unable to connect to the database:', error);
+      process.exit(1);
+    }
+  }
 
-// Dynamic Import Models
-for (const file of files) {
-  const modelPath = pathToFileURL(path.join(__dirname, file)).href;
-  const modelModule = await import(modelPath);
-  const model = modelModule.default;
+  private async loadModels() {
+    const basename = path.basename(__filename);
+    
+    // Read all files in this directory
+    const files = fs.readdirSync(__dirname).filter((file) => {
+      return (
+        file.indexOf('.') !== 0 &&
+        file !== basename &&
+        (file.slice(-3) === '.ts' || file.slice(-3) === '.js')
+      );
+    });
 
-  if (model && model.initModel) {
-    model.initModel(sequelize);
-    db[model.name] = model;
+    // Import and Init each model
+    for (const file of files) {
+      const modelPath = pathToFileURL(path.join(__dirname, file)).href;
+      const modelModule = await import(modelPath);
+      const model = modelModule.default;
+
+      if (model && model.initModel) {
+        model.initModel(this.sequelize);
+        // Store in models object instead of root
+        this.models[model.name] = model; 
+      }
+    }
+  }
+
+  private associateModels() {
+    Object.keys(this.models).forEach((modelName) => {
+      if (this.models[modelName].associate) {
+        this.models[modelName].associate(this.models);
+      }
+    });
   }
 }
 
-// Setup Associations
-Object.keys(db).forEach((modelName) => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
-export default db;
+export default new Database();

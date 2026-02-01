@@ -1,21 +1,26 @@
 import { Router, Request, Response } from 'express';
 import path from 'path';
 
-const router = Router();
+class WebRoutes {
+  public router: Router;
 
-// Home Route (Can return a View or String)
-router.get('/', (req: Request, res: Response) => {
-    const viewPath = path.join(process.cwd(), 'views', 'welcome.html');
-    res.sendFile(viewPath); 
-});
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
 
-// Health Check / Status
-router.get('/status', (req: Request, res: Response) => {
-    res.json({
-        status: 'UP',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
+  protected initializeRoutes(): void {
+    // Home Route
+    this.router.get('/', (req: Request, res: Response) => {
+      const viewPath = path.join(process.cwd(), 'views', 'welcome.html');
+      res.sendFile(viewPath);
     });
-});
 
-export default router;
+    // Status Route
+    this.router.get('/status', (req: Request, res: Response) => {
+      res.json({ status: 'UP', environment: process.env.NODE_ENV });
+    });
+  }
+}
+
+export default new WebRoutes().router;

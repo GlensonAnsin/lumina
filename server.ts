@@ -3,16 +3,11 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import db from './src/models/index';
-import routes from './src/routes/index';
+import db from './src/models/index.js';
+import RouteService from './src/services/RouteService.js';
+import ExceptionHandler from './src/exceptions/Handler.js';
 
-// Load Environment Variables
 dotenv.config();
-
-// Setup __dirname for ESM (Since it doesn't exist by default)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app: Application = express();
 const PORT = process.env.APP_PORT || 3000;
@@ -26,37 +21,21 @@ app.use(express.json());       // Parse JSON bodies (API)
 app.use(express.urlencoded({ extended: true })); // Parse Form bodies
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-// Serve Static Files
-app.use(express.static(path.join(__dirname, '../public')));
-
 // ==========================
 // Register Routes
 // ==========================
-// This loads both your API and Web routes from src/routes/index.ts
-app.use(routes);
+// This loads both your API and Web routes
+RouteService.boot(app);
 
 // ==========================
 // Error Handling
 // ==========================
 
 // 404 Not Found Handler
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-  });
-});
+app.use(ExceptionHandler.notFound);
 
 // Global Error Handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('🔥 Error:', err.stack);
-  
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err : {},
-  });
-});
+app.use(ExceptionHandler.handle);
 
 // ==========================
 // Start Server
@@ -64,8 +43,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 const start = async () => {
   try {
     // Test Database Connection
-    await db.sequelize.authenticate();
-    console.log('✅ Database connected successfully.');
+    await db.connect();
 
     // Start Listening
     app.listen(PORT, () => {

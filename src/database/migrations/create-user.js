@@ -1,7 +1,9 @@
 import { DataTypes } from 'sequelize';
 
-export default {
-  // Run the migrations.
+class CreateUserTable {
+  /**
+   * Run the migrations.
+   */
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('users', {
       id: {
@@ -30,6 +32,12 @@ export default {
       role: {
         type: DataTypes.STRING(20),
         allowNull: false,
+        defaultValue: 'user'
+      },
+      is_deleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
       },
       created_at: {
         allowNull: false,
@@ -40,16 +48,16 @@ export default {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-      },
-      is_deleted: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      },
+      }
     });
-  },
+  }
 
-  // Reverse the migrations
+  /**
+   * Reverse the migrations.
+   */
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('users');
   }
-};
+}
+
+export default new CreateUserTable();

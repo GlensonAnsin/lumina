@@ -1,9 +1,22 @@
 import { Router } from 'express';
 import UserController from '../controllers/UserController.js';
+import Authentication from '../middlewares/Authentication.js';
 
-const router = Router();
-// Standard API Routes
-router.get('/users', UserController.index);
-router.post('/users', UserController.store);
+class ApiRoutes {
+  public router: Router;
 
-export default router;
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
+
+  /**
+   * Define all API routes here.
+   */
+  protected initializeRoutes(): void {
+    this.router.get('/users', Authentication.handle, UserController.index);
+    this.router.post('/users', UserController.store);
+  }
+}
+
+export default new ApiRoutes().router;

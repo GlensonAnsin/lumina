@@ -1,98 +1,148 @@
 import { Umzug, SequelizeStorage } from 'umzug';
-import db from '../src/models/index';
-import { Sequelize } from 'sequelize';
+import { Sequelize, QueryInterface } from 'sequelize';
 import { pathToFileURL } from 'url';
-import configList from '../src/config/database';
+import db from '../src/models/index.js';
+import configList from '../src/config/database.js';
 
-const createDatabaseIfNotExists = async () => {
-  const env = process.env.NODE_ENV || 'development';
-  const config = (configList as any)[env];
-  const dbName = config.database;
+class MigrationRunner {
+  /**
+   * The command line argument (e.g., 'up', 'down', 'reset')
+   */
+  private command: string;
 
-  // Create a temporary connection without a specific database
-  const tempSequelize = new Sequelize('', config.username, config.password, {
-    host: config.host,
-    dialect: config.dialect,
-    logging: false,
-  });
-
-  try {
-    // Run the Create SQL
-    await tempSequelize.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
-  } catch (error) {
-    console.error('❌ Failed to create database:', error);
-    process.exit(1);
-  } finally {
-    await tempSequelize.close();
-  }
-};
-
-const runMigrations = async () => {
-  // Auto-create DB before connecting
-  await createDatabaseIfNotExists();
-
-  const sequelize = db.sequelize;
-
-  // Verify connection first
-  try {
-    await sequelize.authenticate();
-    console.log('🔌 Database connected successfully.');
-  } catch (error) {
-    console.error('❌ Unable to connect to the database:', error);
-    process.exit(1);
+  constructor() {
+    // Get the command from process arguments
+    this.command = process.argv[2] || '';
   }
 
-  const umzug = new Umzug({
-    migrations: {
-      glob: 'src/database/migrations/*.js',
-      resolve: ({ name, path, context }) => {
-        return {
-          name,
-          up: async () => {
-            const migration = await import(pathToFileURL(path as string).href);
-            return migration.default.up(context, sequelize.Sequelize);
-          },
-          down: async () => {
-            const migration = await import(pathToFileURL(path as string).href);
-            return migration.default.down(context, sequelize.Sequelize);
-          },
-        };
-      },
-    },
-    context: sequelize.getQueryInterface(),
-    storage: new SequelizeStorage({ sequelize }),
-    logger: console,
-  });
+  /**
+   * Main entry point to execute the migration logic.
+   */
+  public async run(): Promise<void> {
+    try {
+      // 1. Ensure Database Exists
+      await this.ensureDatabaseExists();
 
-  const command = process.argv[2];
+      // 2. Connect to the App Database
+      await this.connectDatabase();
 
-  try {
-    if (command === 'up') {
-      console.log('🚀 Running Migrations...');
-      await umzug.up();
-      console.log('✅ Migrations executed successfully.');
-    } else if (command === 'down') {
-      console.log('↩️  Rolling back last migration...');
-      await umzug.down();
-      console.log('✅ Rollback complete.');
-    } else if (command === 'reset') {
-      console.log('💥 Resetting Database...');
-      await umzug.down({ to: 0 });
-      console.log('✅ Database reset complete.');
-    } else {
-      console.log(`
-      Unknown command. usage:
-      npm run migrate       -> Run pending migrations
-      npm run migrate:undo  -> Undo last migration
-      npm run migrate:reset -> Undo all migrations
-      `);
+      // 3. Configure Umzug (The Migration Engine)
+      const umzug = this.getUmzugInstance();
+
+      // 4. Execute the requested command
+      await this.executeCommand(umzug);
+      
+      process.exit(0);
+    } catch (error) {
+      console.error('❌ Migration failed:', error);
+      process.exit(1);
     }
-  } catch (error) {
-    console.error('❌ Migration failed:', error);
-    process.exit(1);
   }
 
-  process.exit(0);
-};
+  /**
+   * Check if the database exists and create it if not.
+   */
+  private async ensureDatabaseExists(): Promise<void> {
+    const env = process.env.NODE_ENV || 'development';
+    const config = (configList as any)[env];
+    const dbName = config.database;
 
-runMigrations();
+    // Connect to the server, not the specific DB
+    const tempSequelize = new Sequelize('', config.username, config.password, {
+      host: config.host,
+      dialect: config.dialect,
+      logging: false,
+    });
+
+    try {
+      await tempSequelize.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
+    } catch (error) {
+      console.error('❌ Failed to create database:', error);
+      throw error;
+    } finally {
+      await tempSequelize.close();
+    }
+  }
+
+  /**
+   * Verify the database connection.
+   */
+  private async connectDatabase(): Promise<void> {
+    try {
+      await db.sequelize.authenticate();
+      console.log('🔌 Database connected successfully.');
+    } catch (error) {
+      console.error('❌ Unable to connect to the database:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize and configure Umzug.
+   */
+  private getUmzugInstance(): Umzug<QueryInterface> {
+    const sequelize = db.sequelize;
+
+    return new Umzug<QueryInterface>({
+      migrations: {
+        glob: 'src/database/migrations/*.js',
+        resolve: ({ name, path, context }) => {
+          return {
+            name,
+            up: async () => {
+              // Windows Fix: Convert path to URL
+              const migration = await import(pathToFileURL(path as string).href);
+              return migration.default.up(context, sequelize.Sequelize);
+            },
+            down: async () => {
+              // Windows Fix: Convert path to URL
+              const migration = await import(pathToFileURL(path as string).href);
+              return migration.default.down(context, sequelize.Sequelize);
+            },
+          };
+        },
+      },
+      context: sequelize.getQueryInterface(),
+      storage: new SequelizeStorage({ sequelize }),
+      logger: console,
+    });
+  }
+
+  /**
+   * Handle the specific CLI command logic.
+   */
+  private async executeCommand(umzug: Umzug<QueryInterface>): Promise<void> {
+    switch (this.command) {
+      case 'up':
+        console.log('🚀 Running Migrations...');
+        await umzug.up();
+        console.log('✅ Migrations executed successfully.');
+        break;
+
+      case 'down':
+        console.log('↩️  Rolling back last migration...');
+        await umzug.down();
+        console.log('✅ Rollback complete.');
+        break;
+
+      case 'reset':
+        console.log('💥 Resetting Database...');
+        await umzug.down({ to: 0 });
+        console.log('✅ Database reset complete.');
+        break;
+
+      default:
+        console.log(`
+        Unknown command: "${this.command}"
+        
+        Usage:
+          npm run migrate       -> Run pending migrations
+          npm run migrate:undo  -> Undo last migration
+          npm run migrate:reset -> Undo all migrations
+        `);
+        break;
+    }
+  }
+}
+
+new MigrationRunner().run();
