@@ -1,4 +1,5 @@
 import User, { UserCreationAttributes } from '../models/User.js';
+import Hash from '../utils/Hash.js';
 
 class UserService {
   async getAllUsers() {
@@ -9,8 +10,9 @@ class UserService {
 
   async createUser(data: UserCreationAttributes) {
     // This is the perfect place to hash passwords before saving
-    // const hashedPassword = await bcrypt.hash(data.password, 10);
-    // data.password = hashedPassword;
+    if (data.password) {
+      data.password = await Hash.make(data.password);
+    }
     return await User.create(data);
   }
 }
