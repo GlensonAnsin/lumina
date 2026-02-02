@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import ApiResponse from '../utils/ApiResponse.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import Logger from '../utils/Logger.js';
 
 class ExceptionHandler {
   /**
@@ -18,7 +16,7 @@ class ExceptionHandler {
    */
   handle(err: any, req: Request, res: Response, next: NextFunction) {
     // Log the error
-    console.error('Exception:', err.stack || err.message);
+    Logger.error('Exception:', err.stack || err.message);
 
     const status = err.status || 500;
     const message = err.message || 'Internal Server Error';

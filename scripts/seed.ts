@@ -1,5 +1,6 @@
 import db from '../src/models/index.js';
 import DatabaseSeeder from '../src/database/seeders/DatabaseSeeder.js';
+import Logger from '../src/utils/Logger.js';
 
 class SeederRunner {
   /**
@@ -13,10 +14,10 @@ class SeederRunner {
       // 2. Execute the Main Seeder
       await this.executeSeeding();
 
-      console.log('✅ Database seeding completed successfully.');
+      Logger.info('✅ Database seeding completed successfully.');
       process.exit(0);
     } catch (error) {
-      console.error('❌ Seeding failed:', error);
+      Logger.error('❌ Seeding failed:', error);
       process.exit(1);
     }
   }
@@ -27,9 +28,9 @@ class SeederRunner {
   private async connectDatabase(): Promise<void> {
     try {
       await db.sequelize.authenticate();
-      console.log('🔌 Database connected successfully.');
+      Logger.info('🔌 Database connected successfully.');
     } catch (error) {
-      console.error('❌ Unable to connect to the database:', error);
+      Logger.error('❌ Unable to connect to the database:', error);
       throw error;
     }
   }
@@ -38,7 +39,7 @@ class SeederRunner {
    * Instantiate and run the main DatabaseSeeder.
    */
   private async executeSeeding(): Promise<void> {
-    console.log('🌱 Starting Database Seeder...');
+    Logger.info('🌱 Starting Database Seeder...');
     
     await DatabaseSeeder.run();
   }

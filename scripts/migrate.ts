@@ -3,6 +3,7 @@ import { Sequelize, QueryInterface } from 'sequelize';
 import { pathToFileURL } from 'url';
 import db from '../src/models/index.js';
 import configList from '../src/config/database.js';
+import Logger from '../src/utils/Logger.js';
 
 class MigrationRunner {
   /**
@@ -34,7 +35,7 @@ class MigrationRunner {
       
       process.exit(0);
     } catch (error) {
-      console.error('❌ Migration failed:', error);
+      Logger.error('❌ Migration failed:', error);
       process.exit(1);
     }
   }
@@ -57,7 +58,7 @@ class MigrationRunner {
     try {
       await tempSequelize.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
     } catch (error) {
-      console.error('❌ Failed to create database:', error);
+      Logger.error('❌ Failed to create database:', error);
       throw error;
     } finally {
       await tempSequelize.close();
@@ -70,9 +71,9 @@ class MigrationRunner {
   private async connectDatabase(): Promise<void> {
     try {
       await db.sequelize.authenticate();
-      console.log('🔌 Database connected successfully.');
+      Logger.info('🔌 Database connected successfully.');
     } catch (error) {
-      console.error('❌ Unable to connect to the database:', error);
+      Logger.error('❌ Unable to connect to the database:', error);
       throw error;
     }
   }
@@ -114,25 +115,25 @@ class MigrationRunner {
   private async executeCommand(umzug: Umzug<QueryInterface>): Promise<void> {
     switch (this.command) {
       case 'up':
-        console.log('🚀 Running Migrations...');
+        Logger.info('🚀 Running Migrations...');
         await umzug.up();
-        console.log('✅ Migrations executed successfully.');
+        Logger.info('✅ Migrations executed successfully.');
         break;
 
       case 'down':
-        console.log('↩️  Rolling back last migration...');
+        Logger.info('↩️  Rolling back last migration...');
         await umzug.down();
-        console.log('✅ Rollback complete.');
+        Logger.info('✅ Rollback complete.');
         break;
 
       case 'reset':
-        console.log('💥 Resetting Database...');
+        Logger.info('💥 Resetting Database...');
         await umzug.down({ to: 0 });
-        console.log('✅ Database reset complete.');
+        Logger.info('✅ Database reset complete.');
         break;
 
       default:
-        console.log(`
+        Logger.info(`
         Unknown command: "${this.command}"
         
         Usage:

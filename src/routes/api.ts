@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import UserController from '../controllers/UserController.js';
 import Authentication from '../middlewares/Authentication.js';
+import Validator from '../middlewares/Validator.js';
+import UserRequest from '../requests/UserRequest.js';
+import AuthController from '../controllers/AuthController.js';
+import Limiter from '../middlewares/Limiter.js';
 
 class ApiRoutes {
   public router: Router;
@@ -14,8 +18,10 @@ class ApiRoutes {
    * Define all API routes here.
    */
   protected initializeRoutes(): void {
+    this.router.post('/login', Limiter.auth, AuthController.login);
+    this.router.get('/me', Authentication.handle, AuthController.me);
     this.router.get('/users', Authentication.handle, UserController.index);
-    this.router.post('/users', UserController.store);
+    this.router.post('/users', Validator.validate(UserRequest.store), UserController.store);
   }
 }
 

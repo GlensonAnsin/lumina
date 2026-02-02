@@ -1,10 +1,15 @@
 import User, { UserCreationAttributes } from '../models/User.js';
 import Hash from '../utils/Hash.js';
+import Paginator from '../utils/Paginator.js';
 
 class UserService {
-  async getAllUsers() {
-    return await User.findAll({
-      attributes: { exclude: ['password'] }
+  /**
+   * Get all users with pagination.
+   */
+  async getAllUsers(page: number, limit: number) {
+    return await Paginator.paginate(User, page, limit, {
+      attributes: { exclude: ['password'] },
+      order: [['id', 'DESC']]
     });
   }
 

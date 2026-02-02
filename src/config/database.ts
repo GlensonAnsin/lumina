@@ -1,7 +1,5 @@
-import dotenv from 'dotenv';
 import { Options } from 'sequelize';
-
-dotenv.config();
+import Logger from '../utils/Logger.js';
 
 class DatabaseConfig {
   public development: Options;
@@ -27,9 +25,9 @@ class DatabaseConfig {
       password: process.env.DB_PASSWORD,
       database: isTest ? process.env.DB_DATABASE_TEST : process.env.DB_DATABASE,
       host: process.env.DB_HOST,
-      dialect: (process.env.DB_CONNECTION as any) || 'mysql',
+      dialect: (process.env.DB_DIALECT as any) || 'mysql',
       // Disable logging in test/production to keep logs clean
-      logging: isProd || isTest ? false : console.log,
+      logging: isProd || isTest ? false : (msg) => Logger.info(`[SQL] ${msg}`),
     };
   }
 }

@@ -6,8 +6,7 @@ class Hash {
    * Usage: await Hash.make('password123');
    */
   public async make(plainText: string): Promise<string> {
-    const saltRounds = 10;
-    return await bcrypt.hash(plainText, saltRounds);
+    return await bcrypt.hash(plainText, 10);
   }
 
   /**

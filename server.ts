@@ -1,13 +1,12 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
-import dotenv from 'dotenv';
+import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
 import db from './src/models/index.js';
 import RouteService from './src/services/RouteService.js';
 import ExceptionHandler from './src/exceptions/Handler.js';
-
-dotenv.config();
+import Logger from './src/utils/Logger.js'
+import Limiter from './src/middlewares/Limiter.js'
 
 const app: Application = express();
 const PORT = process.env.APP_PORT || 3000;
@@ -15,11 +14,12 @@ const PORT = process.env.APP_PORT || 3000;
 // ==========================
 // Global Middleware
 // ==========================
-app.use(helmet());             // Security Headers
-app.use(cors());               // Cross-Origin Resource Sharing
-app.use(express.json());       // Parse JSON bodies (API)
-app.use(express.urlencoded({ extended: true })); // Parse Form bodies
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), 'public')));
+app.use(Limiter.global);
 
 // ==========================
 // Register Routes
@@ -47,10 +47,10 @@ const start = async () => {
 
     // Start Listening
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      Logger.info(`🚀 Server running on http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error('❌ Unable to connect to the database:', error);
+    Logger.error('❌ Unable to connect to the database:', error);
     process.exit(1);
   }
 };
