@@ -5,6 +5,7 @@ import Validator from '../middlewares/Validator.js';
 import UserRequest from '../requests/UserRequest.js';
 import AuthController from '../controllers/AuthController.js';
 import Limiter from '../middlewares/Limiter.js';
+import StorageService from '../services/StorageService.js';
 
 class ApiRoutes {
   public router: Router;
@@ -22,6 +23,7 @@ class ApiRoutes {
     this.router.get('/me', Authentication.handle, AuthController.me);
     this.router.get('/users', Authentication.handle, UserController.index);
     this.router.post('/users', Validator.validate(UserRequest.store), UserController.store);
+    this.router.post('/users/avatar', Authentication.handle, StorageService.uploader.single('avatar'), UserController.uploadAvatar);
   }
 }
 

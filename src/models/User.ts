@@ -7,6 +7,7 @@ interface UserAttributes {
   email: string;
   password: string;
   role: string;
+  avatar: string | null;
   is_deleted: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -21,6 +22,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   declare email: string;
   declare password: string;
   declare role: string;
+  declare avatar: string | null;
   declare is_deleted: boolean;
   declare created_at: Date;
   declare updated_at: Date;
@@ -54,6 +56,10 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
           type: DataTypes.STRING,
           allowNull: false,
           defaultValue: 'user',
+        },
+        avatar: {
+          type: DataTypes.STRING,
+          defaultValue: null,
         },
         is_deleted: {
           type: DataTypes.BOOLEAN,

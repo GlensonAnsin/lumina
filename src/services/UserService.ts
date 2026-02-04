@@ -6,19 +6,30 @@ class UserService {
   /**
    * Get all users with pagination.
    */
-  async getAllUsers(page: number, limit: number) {
+  public async getAllUsers(page: number, limit: number) {
     return await Paginator.paginate(User, page, limit, {
       attributes: { exclude: ['password'] },
       order: [['id', 'DESC']]
     });
   }
 
-  async createUser(data: UserCreationAttributes) {
+  public async createUser(data: UserCreationAttributes) {
     // This is the perfect place to hash passwords before saving
     if (data.password) {
       data.password = await Hash.make(data.password);
     }
     return await User.create(data);
+  }
+
+  public async updateAvatar(userId: number, avatarPath: string) {
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    user.avatar = avatarPath;
+    return await user.save();
   }
 }
 

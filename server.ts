@@ -5,8 +5,9 @@ import path from 'path';
 import db from './src/models/index.js';
 import RouteService from './src/services/RouteService.js';
 import ExceptionHandler from './src/exceptions/Handler.js';
-import Logger from './src/utils/Logger.js'
-import Limiter from './src/middlewares/Limiter.js'
+import Logger from './src/utils/Logger.js';
+import Limiter from './src/middlewares/Limiter.js';
+import Maintenance from './src/middlewares/Maintenance.js';
 
 const app: Application = express();
 const PORT = process.env.APP_PORT || 3000;
@@ -14,6 +15,7 @@ const PORT = process.env.APP_PORT || 3000;
 // ==========================
 // Global Middleware
 // ==========================
+app.use(Maintenance.handle);
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors());
 app.use(express.json());
