@@ -20,7 +20,7 @@
     "create:factory": "tsx scripts/create-factory.ts",
     "key:generate": "tsx scripts/generate-keys.ts"
   },
-  "license": "MIT",
+  "private": true,
   "type": "module",
   "dependencies": {
     "@faker-js/faker": "^10.2.0",
