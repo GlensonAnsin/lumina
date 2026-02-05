@@ -1,6 +1,6 @@
 {
   "name": "lumina",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "",
   "main": "server.ts",
   "scripts": {
@@ -20,7 +20,6 @@
     "create:factory": "tsx scripts/create-factory.ts",
     "key:generate": "tsx scripts/generate-keys.ts"
   },
-  "author": "Glenson Ansin",
   "license": "MIT",
   "type": "module",
   "dependencies": {
