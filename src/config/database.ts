@@ -22,6 +22,7 @@ class DatabaseConfig {
   private getEnvironmentConfig(env: 'development' | 'test' | 'production' = 'development'): Options {
     const isTest = env === 'test';
     const isProd = env === 'production';
+    const useSSL = process.env.DB_SSL === 'true';
 
     return {
       username: process.env.DB_USERNAME,
@@ -30,6 +31,12 @@ class DatabaseConfig {
       host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT) || 3306,
       dialect: (process.env.DB_DIALECT as any) || 'mysql',
+      dialectOptions: useSSL ? {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      } : {},
       // Disable logging in test/production to keep logs clean
       logging: isProd || isTest ? false : (msg) => Logger.info(`[SQL] ${msg}`),
     };

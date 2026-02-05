@@ -44,25 +44,55 @@ class MigrationRunner {
   }
 
   /**
+   * Helper to get SSL config for the temp connection
+   */
+  private getSSLConfig() {
+    const useSSL = process.env.DB_SSL === 'true';
+    return useSSL ? {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    } : {};
+  }
+
+  /**
    * Check if the database exists and create it if not.
    */
   private async ensureDatabaseExists(): Promise<void> {
     const env = process.env.NODE_ENV || 'development';
     const config = (configList as any)[env];
     const dbName = config.database;
+    const isPostgres = config.dialect === 'postgres';
+
+    const connectionDb = isPostgres ? 'postgres' : '';
 
     // Connect to the server, not the specific DB
-    const tempSequelize = new Sequelize('', config.username, config.password, {
+    const tempSequelize = new Sequelize(connectionDb, config.username, config.password, {
       host: config.host,
+      port: config.port,
       dialect: config.dialect,
       logging: false,
+      dialectOptions: this.getSSLConfig(),
     });
 
     try {
-      await tempSequelize.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
+      if (isPostgres) {
+        const result = await tempSequelize.query(
+          `SELECT 1 FROM pg_database WHERE datname = '${dbName}'`
+        );
+        
+        if ((result[0] as any[]).length === 0) {
+            Logger.info(`Database "${dbName}" not found. Creating...`);
+            await tempSequelize.query(`CREATE DATABASE "${dbName}"`);
+            Logger.info(`Database "${dbName}" created.`);
+        }
+      } else {
+        // MySQL fallback
+        await tempSequelize.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
+      }
     } catch (error) {
       Logger.error('Failed to create database:', error);
-      throw error;
     } finally {
       await tempSequelize.close();
     }

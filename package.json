@@ -17,7 +17,8 @@
     "create:model": "tsx scripts/create-model.ts",
     "create:migration": "tsx scripts/create-migration.ts",
     "create:controller": "tsx scripts/create-controller.ts",
-    "create:factory": "tsx scripts/create-factory.ts"
+    "create:factory": "tsx scripts/create-factory.ts",
+    "key:generate": "tsx scripts/generate-keys.ts"
   },
   "author": "Ghost",
   "license": "ISC",
@@ -35,6 +36,8 @@
     "multer": "^2.0.2",
     "mysql2": "^3.16.2",
     "nodemon": "^3.1.11",
+    "pg": "^8.18.0",
+    "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.5",
     "umzug": "^3.8.2",
