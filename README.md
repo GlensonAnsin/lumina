@@ -157,6 +157,21 @@ lumina/
 
 ### Installation
 
+#### Option 1: Using the CLI (Recommended)
+
+```bash
+# Create a new Lumina project using npm create
+npm create lumina-app@latest
+
+# Follow the interactive prompts to set up your project
+# Answer the project name question, then:
+cd my-lumina-app
+npm install
+npm run dev
+```
+
+#### Option 2: Clone from Repository
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/yourusername/lumina.git
@@ -171,7 +186,7 @@ cp .env .env.local
 
 ### Configuration
 
-Edit your `.env` file:
+Your project includes a `.env` file template. Edit it with your configuration:
 
 ```env
 # Database Configuration
@@ -200,18 +215,23 @@ MAINTENANCE_SECRET=secret_key_for_bypass
 
 ### Quick Start
 
+After installation and configuration, you can get up and running:
+
 ```bash
-# 1. Run migrations
+# 1. Run migrations to set up the database schema
 npm run migrate
 
-# 2. Seed the database
+# 2. Seed the database with sample data
 npm run db:seed
 
-# 3. Start development server
+# 3. Start the development server
 npm run dev
 ```
 
-The server will run at `http://localhost:3000`
+The server will start at `http://localhost:3000` by default (configurable via `APP_PORT` in `.env`)
+
+**Welcome page**: Visit `http://localhost:3000` to see the welcome message
+**API Status**: Check `http://localhost:3000/status` for API status
 
 ---
 
