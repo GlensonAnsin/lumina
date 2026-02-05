@@ -12,7 +12,7 @@ class UserFactory extends Factory<User> {
       email: faker.internet.email(),
       password: '$2b$10$YourHashedPasswordHere',
       role: 'user',
-      is_deleted: false,
+      avatar: null,
     };
   }
 

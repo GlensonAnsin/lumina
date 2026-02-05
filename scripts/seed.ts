@@ -14,10 +14,10 @@ class SeederRunner {
       // 2. Execute the Main Seeder
       await this.executeSeeding();
 
-      Logger.info('✅ Database seeding completed successfully.');
+      Logger.info('Database seeding completed successfully.');
       process.exit(0);
     } catch (error) {
-      Logger.error('❌ Seeding failed:', error);
+      Logger.error('Seeding failed:', error);
       process.exit(1);
     }
   }
@@ -26,20 +26,14 @@ class SeederRunner {
    * Verify the database connection.
    */
   private async connectDatabase(): Promise<void> {
-    try {
-      await db.sequelize.authenticate();
-      Logger.info('🔌 Database connected successfully.');
-    } catch (error) {
-      Logger.error('❌ Unable to connect to the database:', error);
-      throw error;
-    }
+      await db.connect();
   }
 
   /**
    * Instantiate and run the main DatabaseSeeder.
    */
   private async executeSeeding(): Promise<void> {
-    Logger.info('🌱 Starting Database Seeder...');
+    Logger.info('Starting Database Seeder...');
     
     await DatabaseSeeder.run();
   }

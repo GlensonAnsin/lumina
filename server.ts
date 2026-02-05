@@ -8,6 +8,9 @@ import ExceptionHandler from './src/exceptions/Handler.js';
 import Logger from './src/utils/Logger.js';
 import Limiter from './src/middlewares/Limiter.js';
 import Maintenance from './src/middlewares/Maintenance.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.APP_PORT || 3000;
@@ -49,10 +52,10 @@ const start = async () => {
 
     // Start Listening
     app.listen(PORT, () => {
-      Logger.info(`🚀 Server running on http://localhost:${PORT}`);
+      Logger.info(`Server running on http://localhost:${PORT}`);
     });
   } catch (error) {
-    Logger.error('❌ Unable to connect to the database:', error);
+    Logger.error('Unable to connect to the database:', error);
     process.exit(1);
   }
 };

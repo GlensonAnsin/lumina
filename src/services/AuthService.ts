@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Hash from '../utils/Hash.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class AuthService {
   public async login(email: string, password: string) {
@@ -16,7 +19,10 @@ class AuthService {
       { expiresIn: process.env.JWT_EXPIRES_IN || '1d' } as jwt.SignOptions
     );
 
-    return { user, token };
+    const userResponse = user.toJSON();
+    const { password: _, ...userWithoutPassword } = userResponse;
+
+    return { user: userWithoutPassword, token };
   }
 }
 

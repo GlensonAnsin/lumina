@@ -1,5 +1,8 @@
 import { Router, Request, Response } from 'express';
 import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class WebRoutes {
   public router: Router;

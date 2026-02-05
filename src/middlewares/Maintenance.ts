@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 import ApiResponse from '../utils/ApiResponse.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class Maintenance {
   private lockFile = path.join(process.cwd(), 'maintenance.lock');
@@ -14,7 +17,16 @@ class Maintenance {
         return next();
       }
 
+      res.status(503);
       res.setHeader('Retry-After', '60');
+
+      if (req.accepts('html')) {
+        const viewPath = path.join(process.cwd(), 'views', 'maintenance.html');
+        if (fs.existsSync(viewPath)) {
+          return res.sendFile(viewPath);
+        }
+      }
+
       return ApiResponse.error(res, 'System is currently under maintenance. Please try again later.', 503);
     }
     

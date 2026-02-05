@@ -4,6 +4,9 @@ import { pathToFileURL } from 'url';
 import db from '../src/models/index.js';
 import configList from '../src/config/database.js';
 import Logger from '../src/utils/Logger.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class MigrationRunner {
   /**
@@ -35,7 +38,7 @@ class MigrationRunner {
       
       process.exit(0);
     } catch (error) {
-      Logger.error('❌ Migration failed:', error);
+      Logger.error('Migration failed:', error);
       process.exit(1);
     }
   }
@@ -58,7 +61,7 @@ class MigrationRunner {
     try {
       await tempSequelize.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
     } catch (error) {
-      Logger.error('❌ Failed to create database:', error);
+      Logger.error('Failed to create database:', error);
       throw error;
     } finally {
       await tempSequelize.close();
@@ -69,13 +72,7 @@ class MigrationRunner {
    * Verify the database connection.
    */
   private async connectDatabase(): Promise<void> {
-    try {
-      await db.sequelize.authenticate();
-      Logger.info('🔌 Database connected successfully.');
-    } catch (error) {
-      Logger.error('❌ Unable to connect to the database:', error);
-      throw error;
-    }
+      await db.connect();
   }
 
   /**
@@ -115,21 +112,21 @@ class MigrationRunner {
   private async executeCommand(umzug: Umzug<QueryInterface>): Promise<void> {
     switch (this.command) {
       case 'up':
-        Logger.info('🚀 Running Migrations...');
+        Logger.info('Running Migrations...');
         await umzug.up();
-        Logger.info('✅ Migrations executed successfully.');
+        Logger.info('Migrations executed successfully.');
         break;
 
       case 'down':
-        Logger.info('↩️  Rolling back last migration...');
+        Logger.info('Rolling back last migration...');
         await umzug.down();
-        Logger.info('✅ Rollback complete.');
+        Logger.info('Rollback complete.');
         break;
 
       case 'reset':
-        Logger.info('💥 Resetting Database...');
+        Logger.info('Resetting Database...');
         await umzug.down({ to: 0 });
-        Logger.info('✅ Database reset complete.');
+        Logger.info('Database reset complete.');
         break;
 
       default:

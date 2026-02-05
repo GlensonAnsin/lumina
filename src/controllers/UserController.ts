@@ -43,8 +43,8 @@ class UserController {
         path: filePath,
         url: `${req.protocol}://${req.get('host')}/${filePath}`
       }, 'Avatar uploaded successfully');
-    } catch (error: any) {
-      return ApiResponse.error(res, error.message, 500);
+    } catch (error) {
+      next(error);
     }
   }
 }

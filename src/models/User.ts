@@ -1,4 +1,5 @@
 import { Model, DataTypes, Sequelize, Optional } from 'sequelize';
+import Hash from '../utils/Hash.js';
 
 interface UserAttributes {
   id: number;
@@ -8,12 +9,12 @@ interface UserAttributes {
   password: string;
   role: string;
   avatar: string | null;
-  is_deleted: boolean;
   created_at?: Date;
   updated_at?: Date;
+  deleted_at?: Date | null
 }
 
-export interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'created_at' | 'updated_at'> {}
+export interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'role' | 'avatar'> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   declare id: number;
@@ -23,9 +24,9 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   declare password: string;
   declare role: string;
   declare avatar: string | null;
-  declare is_deleted: boolean;
   declare created_at: Date;
   declare updated_at: Date;
+  declare deleted_at?: Date | null;
 
   static initModel(sequelize: Sequelize) {
     User.init(
@@ -58,21 +59,30 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
           defaultValue: 'user',
         },
         avatar: {
-          type: DataTypes.STRING,
+          type: DataTypes.TEXT,
+          allowNull: true,
           defaultValue: null,
-        },
-        is_deleted: {
-          type: DataTypes.BOOLEAN,
-          allowNull: false,
-          defaultValue: false,
         },
       },
       {
         sequelize,
         modelName: 'User',
         tableName: 'users',
+        paranoid: true,
         timestamps: true,
         underscored: true,
+        hooks: {
+          beforeCreate: async (user: User) => {
+            if (user.password) {
+              user.password = await Hash.make(user.password);
+            }
+          },
+          beforeUpdate: async (user: User) => {
+            if (user.changed('password')) {
+              user.password = await Hash.make(user.password);
+            }
+          },
+        },
       }
     );
   }

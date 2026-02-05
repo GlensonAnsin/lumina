@@ -1,5 +1,8 @@
 import winston from 'winston';
 import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class Logger {
   private logger: winston.Logger;

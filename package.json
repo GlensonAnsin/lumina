@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.ts",
   "scripts": {
-    "dev": "nodemon --exec tsx -r dotenv/config server.ts",
+    "dev": "nodemon --exec tsx server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,7 +13,11 @@
     "migrate:reset": "tsx scripts/migrate.ts reset",
     "db:seed": "tsx scripts/seed.ts",
     "down": "tsx scripts/maintenance.ts down",
-    "up": "tsx scripts/maintenance.ts up"
+    "up": "tsx scripts/maintenance.ts up",
+    "create:model": "tsx scripts/create-model.ts",
+    "create:migration": "tsx scripts/create-migration.ts",
+    "create:controller": "tsx scripts/create-controller.ts",
+    "create:factory": "tsx scripts/create-factory.ts"
   },
   "author": "Ghost",
   "license": "ISC",

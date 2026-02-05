@@ -2,40 +2,72 @@ import fs from 'fs';
 import path from 'path';
 import Logger from '../src/utils/Logger.js';
 
-const action = process.argv[2];
-const lockFile = path.join(process.cwd(), 'maintenance.lock');
+class MaintenanceManager {
+  private lockFile: string;
+  private action: string;
 
-const handleMaintenance = () => {
-  if (action === 'down') {
-    // Create the file
+  constructor() {
+    this.lockFile = path.join(process.cwd(), 'maintenance.lock');
+    // Get the command line argument (e.g., 'up' or 'down')
+    this.action = process.argv[2];
+  }
+
+  /**
+   * The main entry point for the script.
+   */
+  public run(): void {
+    switch (this.action) {
+      case 'down':
+        this.enableMaintenance();
+        break;
+      case 'up':
+        this.disableMaintenance();
+        break;
+      default:
+        this.showUsage();
+        break;
+    }
+  }
+
+  /**
+   * Puts the application into maintenance mode.
+   */
+  private enableMaintenance(): void {
     try {
-      fs.writeFileSync(lockFile, 'MAINTENANCE_MODE_ACTIVE');
-      Logger.info('🔴 Application is now in MAINTENANCE MODE (503).');
-      Logger.info('   Run "npm run up" to bring it back online.');
+      fs.writeFileSync(this.lockFile, 'MAINTENANCE_MODE_ACTIVE');
+      Logger.info('Application is now in MAINTENANCE MODE (503).');
+      Logger.info('Run "npm run up" to bring it back online.');
     } catch (error) {
       Logger.error('Failed to enable maintenance mode:', error);
+      process.exit(1);
     }
-  } 
-  
-  else if (action === 'up') {
-    // Delete the file
+  }
+
+  /**
+   * Brings the application back online.
+   */
+  private disableMaintenance(): void {
     try {
-      if (fs.existsSync(lockFile)) {
-        fs.unlinkSync(lockFile);
-        Logger.info('🟢 Application is now LIVE.');
+      if (fs.existsSync(this.lockFile)) {
+        fs.unlinkSync(this.lockFile);
+        Logger.info('Application is now LIVE.');
       } else {
-        Logger.warn('⚠️ Application was already live.');
+        Logger.warn('Application was already live.');
       }
     } catch (error) {
       Logger.error('Failed to disable maintenance mode:', error);
+      process.exit(1);
     }
-  } 
-  
-  else {
-    Logger.info('Usage:');
-    Logger.info('  npm run down  -> Put server in maintenance mode');
-    Logger.info('  npm run up    -> Bring server back online');
   }
-};
 
-handleMaintenance();
+  /**
+   * Shows help instructions.
+   */
+  private showUsage(): void {
+    Logger.info('\nUsage:');
+    Logger.info('  npm run down  -> Put server in maintenance mode');
+    Logger.info('  npm run up    -> Bring server back online\n');
+  }
+}
+
+new MaintenanceManager().run();

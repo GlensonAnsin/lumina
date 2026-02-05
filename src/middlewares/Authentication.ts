@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import ApiResponse from '../utils/ApiResponse.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class Authentication {
   /**

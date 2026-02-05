@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import ApiResponse from '../utils/ApiResponse.js';
 import Logger from '../utils/Logger.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class ExceptionHandler {
   /**

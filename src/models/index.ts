@@ -4,6 +4,9 @@ import { Sequelize } from 'sequelize';
 import { fileURLToPath, pathToFileURL } from 'url';
 import configList from '../config/database.js';
 import Logger from '../utils/Logger.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +20,7 @@ class Database {
     const config = (configList as any)[env];
 
     if (!config) {
-      Logger.error(`❌ Fatal Error: Database config for "${env}" not found.`);
+      Logger.error(`Fatal Error: Database config for "${env}" not found.`);
       process.exit(1);
     }
 
@@ -37,7 +40,7 @@ class Database {
     try {
       // 1. Authenticate Connection
       await this.sequelize.authenticate();
-      Logger.info('✅ Database connection established.');
+      Logger.info('Database connection established.');
 
       // 2. Load Models Dynamically
       await this.loadModels();
@@ -46,7 +49,7 @@ class Database {
       this.associateModels();
       
     } catch (error) {
-      Logger.error('❌ Unable to connect to the database:', error);
+      Logger.error('Unable to connect to the database:', error);
       process.exit(1);
     }
   }
