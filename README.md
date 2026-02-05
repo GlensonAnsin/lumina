@@ -1194,7 +1194,25 @@ For issues, questions, or contributions:
 
 ## 📄 License
 
-ISC - See LICENSE file for details
+This project is licensed under the **MIT License** - a permissive open-source license that allows you to:
+
+- ✅ **Use commercially** - Use the software for commercial purposes
+- ✅ **Modify freely** - Modify the source code as needed
+- ✅ **Distribute** - Distribute the software and modifications
+- ✅ **Private use** - Use privately with no restrictions
+
+### Conditions
+
+The only requirements are:
+
+- 📋 **Include License & Copyright** - Include a copy of the MIT License and copyright notice in your project
+- 📝 **Provide License Text** - Make the LICENSE file available in your distribution
+
+### Copyright
+
+Copyright (c) 2026 Glenson Ansin
+
+For the full license text, see the [LICENSE](./LICENSE) file in this repository.
 
 ---
 
