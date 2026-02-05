@@ -181,7 +181,7 @@ cd lumina
 npm install
 
 # 3. Create .env file from template
-cp .env .env.example
+cp .env.example .env
 ```
 
 ### Configuration
