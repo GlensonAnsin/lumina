@@ -4,9 +4,7 @@ import { Sequelize } from 'sequelize';
 import { fileURLToPath, pathToFileURL } from 'url';
 import configList from '../config/database.js';
 import Logger from '../utils/Logger.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import env from '../config/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,11 +14,11 @@ class Database {
   public models: any = {};
 
   constructor() {
-    const env = process.env.NODE_ENV || 'development';
-    const config = (configList as any)[env];
+    const currentEnv = env.NODE_ENV;
+    const config = (configList as any)[currentEnv];
 
     if (!config) {
-      Logger.error(`Fatal Error: Database config for "${env}" not found.`);
+      Logger.error(`Fatal Error: Database config for "${currentEnv}" not found.`);
       process.exit(1);
     }
 

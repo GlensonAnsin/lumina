@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import ApiResponse from '../utils/ApiResponse.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import env from '../config/env.js';
 
 class Authentication {
   /**
@@ -19,8 +17,7 @@ class Authentication {
     const token = authHeader.split(' ')[1];
 
     try {
-      const secret = process.env.JWT_SECRET || 'default_secret';
-      const decoded = jwt.verify(token, secret);
+      const decoded = jwt.verify(token, env.JWT_SECRET);
 
       req.user = decoded;
 

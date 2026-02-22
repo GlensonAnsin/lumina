@@ -1,8 +1,6 @@
 import winston from 'winston';
 import path from 'path';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import env from '../config/env.js';
 
 class Logger {
   private logger: winston.Logger;
@@ -14,7 +12,7 @@ class Logger {
     });
 
     this.logger = winston.createLogger({
-      level: process.env.LOG_LEVEL || 'info',
+      level: env.LOG_LEVEL,
       format: winston.format.combine(
         winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         winston.format.errors({ stack: true }),
@@ -35,7 +33,7 @@ class Logger {
     });
 
     // If we're not in production, log to the console with colors
-    if (process.env.NODE_ENV !== 'production') {
+    if (env.NODE_ENV !== 'production') {
       this.logger.add(
         new winston.transports.Console({
           format: winston.format.combine(

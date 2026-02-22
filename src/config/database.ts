@@ -1,8 +1,6 @@
 import { Options } from 'sequelize';
 import Logger from '../utils/Logger.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import env from './env.js';
 
 class DatabaseConfig {
   public development: Options;
@@ -19,18 +17,18 @@ class DatabaseConfig {
    * Helper to generate config based on the environment.
    * This reduces repetition.
    */
-  private getEnvironmentConfig(env: 'development' | 'test' | 'production' = 'development'): Options {
-    const isTest = env === 'test';
-    const isProd = env === 'production';
-    const useSSL = process.env.DB_SSL === 'true';
+  private getEnvironmentConfig(envName: 'development' | 'test' | 'production' = 'development'): Options {
+    const isTest = envName === 'test';
+    const isProd = envName === 'production';
+    const useSSL = env.DB_SSL === 'true';
 
     return {
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: isTest ? process.env.DB_DATABASE_TEST : process.env.DB_DATABASE,
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT) || 3306,
-      dialect: (process.env.DB_DIALECT as any) || 'mysql',
+      username: env.DB_USERNAME,
+      password: env.DB_PASSWORD,
+      database: isTest ? env.DB_DATABASE_TEST : env.DB_DATABASE,
+      host: env.DB_HOST,
+      port: env.DB_PORT,
+      dialect: env.DB_DIALECT as any,
       dialectOptions: useSSL ? {
         ssl: {
           require: true,

@@ -2,9 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 import ApiResponse from '../utils/ApiResponse.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import env from '../config/env.js';
 
 class Maintenance {
   private lockFile = path.join(process.cwd(), 'maintenance.lock');
@@ -13,7 +11,7 @@ class Maintenance {
     if (fs.existsSync(this.lockFile)) {
       const bypassSecret = req.headers['x-bypass-maintenance'];
 
-      if (bypassSecret === process.env.MAINTENANCE_SECRET) {
+      if (bypassSecret === env.MAINTENANCE_SECRET) {
         return next();
       }
 

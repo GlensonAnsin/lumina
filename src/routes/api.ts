@@ -19,7 +19,12 @@ class ApiRoutes {
    * Define all API routes here.
    */
   protected initializeRoutes(): void {
+    // Auth
     this.router.post('/login', Limiter.auth, AuthController.login);
+    this.router.post('/refresh', AuthController.refresh);
+    this.router.post('/logout', Authentication.handle, AuthController.logout);
+
+    // Protected
     this.router.get('/me', Authentication.handle, AuthController.me);
     this.router.get('/users', Authentication.handle, UserController.index);
     this.router.post('/users', Validator.validate(UserRequest.store), UserController.store);
