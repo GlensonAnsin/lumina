@@ -193,7 +193,7 @@ lumina/
 
 ```bash
 # Create a new Lumina project using npm create
-npm create lumina-app@latest
+npm create lumina-project@latest
 
 # Follow the interactive prompts to set up your project
 # Answer the project name question, then:
