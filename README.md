@@ -1,4 +1,4 @@
-# 🌟 Lumina - Express.js TypeScript Boilerplate
+# <img src="public/img/logo1.png" alt="Lumina Logo" height="40" align="top" /> Lumina - Express.js TypeScript Boilerplate
 
 A production-grade Express.js starter kit with TypeScript, featuring a fully Object-Oriented architecture, Singleton services, and type-safe database interactions powered by Sequelize ORM. Supports multiple databases including MySQL, PostgreSQL, MariaDB, and SQLite.
 
