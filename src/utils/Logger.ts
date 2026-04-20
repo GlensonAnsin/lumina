@@ -34,11 +34,23 @@ class Logger {
 
     // If we're not in production, log to the console with colors
     if (env.NODE_ENV !== 'production') {
+      const consoleFormat = winston.format.printf(({ level, message, timestamp, stack, ...meta }) => {
+        // Bright black (gray) for timestamp
+        const time = `\x1b[90m[${timestamp}]\x1b[39m`;
+        
+        // Sometimes we pass metadata, let's format it if it's not empty, excluding 'timestamp' which is present in meta as well
+        const metaString = Object.keys(meta).length ? `\n\x1b[90m${JSON.stringify(meta, null, 2)}\x1b[39m` : '';
+
+        return `${time} ${level}: ${message}${metaString}${stack ? `\n${stack}` : ''}`;
+      });
+
       this.logger.add(
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.colorize(),
-            winston.format.simple()
+            winston.format.timestamp({ format: 'HH:mm:ss' }),
+            winston.format.errors({ stack: true }),
+            consoleFormat
           ),
         })
       );

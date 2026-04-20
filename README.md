@@ -57,9 +57,9 @@ A production-grade Express.js starter kit with TypeScript, featuring a fully Obj
 - 🔗 **Model Relationships** - Support for Sequelize associations
 
 ### Developer Experience
-- 📁 **Code Generators** - CLI scripts to scaffold Models, Migrations, Factories, and Controllers
+- 📁 **Code Generators** - CLI scripts to scaffold Models, Migrations (with automated model scanning), Factories, and Controllers
 - 📝 **Request Validation** - Zod schema-based validation
-- 🌳 **Winston Logging** - Production-ready logging system with HTTP request logging
+- 🌳 **Winston Logging** - Production-ready, beautified logging system with HTTP request logging
 - 📦 **File Upload** - Multer integration with MIME type + extension validation
 - 🔄 **Hot Reload** - Nodemon for development (**npm run dev**)
 - 📊 **Pagination Metadata** - Rich metadata for paginated responses
@@ -782,6 +782,9 @@ npm test
 # Run all pending migrations
 npm run migrate
 
+# Run all pending migrations and seed the database
+npm run migrate:seed
+
 # Rollback the last migration
 npm run migrate:undo
 
@@ -810,8 +813,12 @@ npm run create:model ModelName
 
 # Generate a new migration
 npm run create:migration create_table_name
+# Automatically scans the matching model to generate table schema, data types, and foreign key constraints.
 # Creates: src/database/migrations/TIMESTAMP-create_table_name.js
 
+# Generate migrations for all models
+npm run create:migration all
+# Automatically generates migrations for all models, topological sorting by foreign key dependencies.
 # Generate a new controller
 npm run create:controller UserController
 npm run create:controller user  # Auto-appends 'Controller'

@@ -37,25 +37,22 @@ class CreateRefreshTokensTable {
         defaultValue: false,
       },
       created_at: {
-        allowNull: false,
         type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updated_at: {
-        allowNull: false,
         type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
-
-    await queryInterface.addIndex('refresh_tokens', ['token']);
-    await queryInterface.addIndex('refresh_tokens', ['user_id']);
   }
 
   /**
    * Reverse the migrations.
    */
-  async down(queryInterface) {
+  async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('refresh_tokens');
   }
 }

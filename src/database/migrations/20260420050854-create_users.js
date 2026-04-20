@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
 
-class CreateUserTable {
+class CreateUsersTable {
   /**
    * Run the migrations.
    */
@@ -10,29 +10,29 @@ class CreateUserTable {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: DataTypes.BIGINT
+        type: DataTypes.BIGINT,
       },
       firstname: {
-        type: DataTypes.STRING(50),
-        allowNull: false
+        type: DataTypes.STRING,
+        allowNull: false,
       },
       lastname: {
-        type: DataTypes.STRING(50),
-        allowNull: false
+        type: DataTypes.STRING,
+        allowNull: false,
       },
       email: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.STRING,
+        allowNull: false,
         unique: true,
-        allowNull: false
       },
       password: {
-        type: DataTypes.STRING(255),
-        allowNull: false
+        type: DataTypes.STRING,
+        allowNull: false,
       },
       role: {
-        type: DataTypes.STRING(20),
+        type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: 'user'
+        defaultValue: 'user',
       },
       avatar: {
         type: DataTypes.TEXT,
@@ -65,4 +65,4 @@ class CreateUserTable {
   }
 }
 
-export default new CreateUserTable();
+export default new CreateUsersTable();
