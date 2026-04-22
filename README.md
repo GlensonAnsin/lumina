@@ -1,4 +1,4 @@
-# <img src="public/img/logo1.png" alt="Lumina Logo" height="40" align="top" /> Lumina - Full-Stack Express + React + Inertia Starter Kit
+# <img src="public/img/logo1.png" alt="Lumina Logo" height="40" align="top" /> Lumina - Express + React + Inertia Starter Kit
 
 A production-grade monolithic starter kit featuring Express, React, Vite, and Inertia.js. It boasts a fully Object-Oriented backend architecture, Singleton services, and type-safe database interactions powered by Sequelize ORM. Supports multiple databases including MySQL, PostgreSQL, MariaDB, and SQLite.
 
