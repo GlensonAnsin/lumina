@@ -1,3 +1,35 @@
+# Dependencies
 node_modules/
-logs/
+
+# Builds
+dist/
+public/build/
+
+# Uploads & Storage
+public/uploads/
+
+# Environment & Config
 .env
+.env.*
+!.env.example
+
+# Logs & Debugging
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# System
+.DS_Store
+Thumbs.db
+maintenance.lock
+
+# IDE / Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

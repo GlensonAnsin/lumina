@@ -1,6 +1,6 @@
-# <img src="public/img/logo1.png" alt="Lumina Logo" height="40" align="top" /> Lumina - Express.js TypeScript Boilerplate
+# <img src="public/img/logo1.png" alt="Lumina Logo" height="40" align="top" /> Lumina - Full-Stack Express + React + Inertia Starter Kit
 
-A production-grade Express.js starter kit with TypeScript, featuring a fully Object-Oriented architecture, Singleton services, and type-safe database interactions powered by Sequelize ORM. Supports multiple databases including MySQL, PostgreSQL, MariaDB, and SQLite.
+A production-grade monolithic starter kit featuring Express, React, Vite, and Inertia.js. It boasts a fully Object-Oriented backend architecture, Singleton services, and type-safe database interactions powered by Sequelize ORM. Supports multiple databases including MySQL, PostgreSQL, MariaDB, and SQLite.
 
 ---
 
@@ -30,6 +30,7 @@ A production-grade Express.js starter kit with TypeScript, featuring a fully Obj
 ## ✨ Features
 
 ### Core Features
+- ✅ **Full-Stack Monolith** - React frontend integrated directly with Express via Inertia.js
 - ✅ **TypeScript Support** - Full type safety for the entire codebase
 - ✅ **Object-Oriented Architecture** - Clean, maintainable code structure
 - ✅ **Singleton Services** - Reusable, globally managed services
@@ -61,12 +62,12 @@ A production-grade Express.js starter kit with TypeScript, featuring a fully Obj
 - 📝 **Request Validation** - Zod schema-based validation
 - 🌳 **Winston Logging** - Production-ready, beautified logging system with HTTP request logging
 - 📦 **File Upload** - Multer integration with MIME type + extension validation
-- 🔄 **Hot Reload** - Nodemon for development (**npm run dev**)
+- 🔄 **Hot Reload** - Vite HMR for React and Nodemon for Express (**npm run dev**)
 - 📊 **Pagination Metadata** - Rich metadata for paginated responses
 - 🧪 **Testing** - Vitest test framework with initial test suite
 - 🗜️ **Compression** - Gzip response compression for better performance
 - 🏥 **Health Check** - Container-ready `/health` endpoint with DB ping
-- 🎨 **Styled Views** - Beautiful dark-themed welcome, status, maintenance, and 404 pages
+- 🎨 **Modern React Views** - Beautiful dark-themed Welcome, Status, Maintenance, and 404 pages built with React and Inertia.
 
 ---
 
@@ -76,6 +77,7 @@ A production-grade Express.js starter kit with TypeScript, featuring a fully Obj
 
 | Layer | Technology |
 |-------|-----------|
+| **Frontend** | React, Inertia.js, Vite |
 | **Runtime** | Node.js |
 | **Language** | TypeScript (ES2022) |
 | **Framework** | Express.js 5.x |
@@ -91,7 +93,7 @@ A production-grade Express.js starter kit with TypeScript, featuring a fully Obj
 | **Fake Data** | Faker.js |
 | **Migrations** | Umzug 3.x |
 | **Security** | Helmet, CSRF, CORS |
-| **Development** | Nodemon, tsx |
+| **Development** | Vite, Nodemon, tsx |
 
 ---
 
@@ -101,6 +103,14 @@ A production-grade Express.js starter kit with TypeScript, featuring a fully Obj
 
 ```
 lumina/
+├── resources/
+│   ├── css/
+│   │   └── app.css                  # Global React styles
+│   ├── js/
+│   │   ├── Pages/                   # React Inertia pages
+│   │   └── app.tsx                  # React entry point
+│   └── views/
+│       └── app.html                 # Main HTML template for Inertia
 ├── src/
 │   ├── config/
 │   │   ├── database.ts              # Database configuration

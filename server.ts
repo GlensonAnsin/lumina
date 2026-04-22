@@ -12,6 +12,7 @@ import Limiter from './src/middlewares/Limiter.js';
 import Maintenance from './src/middlewares/Maintenance.js';
 import RequestLogger from './src/middlewares/RequestLogger.js';
 import env from './src/config/env.js';
+import InertiaMiddleware from './src/middlewares/InertiaMiddleware.js';
 
 const app: Application = express();
 const PORT = env.APP_PORT;
@@ -19,8 +20,12 @@ const PORT = env.APP_PORT;
 // ==========================
 // Global Middleware
 // ==========================
+app.use(InertiaMiddleware.handle);
 app.use(Maintenance.handle);
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: env.NODE_ENV === 'production' ? undefined : false,
+}));
 app.use(cors({
   origin: env.CORS_ORIGIN,
   credentials: true,

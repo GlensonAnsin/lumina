@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import path from 'path';
 import db from '../models/index.js';
 
 class WebRoutes {
@@ -13,14 +12,17 @@ class WebRoutes {
   protected initializeRoutes(): void {
     // Home Route
     this.router.get('/', (req: Request, res: Response) => {
-      const viewPath = path.join(process.cwd(), 'views', 'welcome.html');
-      res.sendFile(viewPath);
+      res.inertia('Welcome', { version: '1.0.0' });
     });
 
-    // Status Route (HTML view)
+    // Status Route
     this.router.get('/status', (req: Request, res: Response) => {
-      const viewPath = path.join(process.cwd(), 'views', 'status.html');
-      res.sendFile(viewPath);
+      res.inertia('Status', {
+        status: 'UP',
+        environment: process.env.NODE_ENV,
+        uptime: process.uptime(),
+        memoryMB: (process.memoryUsage().rss / 1024 / 1024).toFixed(1),
+      });
     });
 
     // Status JSON API (used by the status view)
