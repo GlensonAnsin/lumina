@@ -38,14 +38,14 @@ A production-grade monolithic starter kit featuring Express, React, Vite, and In
 - ✅ **Sequelize ORM** - Type-safe database interactions with MySQL support
 
 ### Authentication & Security
-- 🔐 **JWT Authentication** - Short-lived access tokens (15m) + long-lived refresh tokens (7d)
+- 🔐 **Advanced JWT Authentication** - Short-lived access tokens + long-lived refresh tokens with **Silent Refresh**
 - 🔒 **Password Hashing** - Secure bcrypt implementation
 - 🛡️ **Helmet** - HTTP headers security middleware
 - ⚡ **Rate Limiting** - Global and auth-specific request rate limits
 - 🔑 **CORS** - Configurable origin restriction via `CORS_ORIGIN` env var
 - 🛠️ **Maintenance Mode** - Graceful application downtime with bypass capability
 - 🛡️ **CSRF Protection** - Double-submit cookie pattern for web routes
-- 🍪 **Secure Cookies** - `httpOnly`, `secure`, and `sameSite` cookie configuration
+- 🍪 **Secure Cookies** - `httpOnly`, `secure`, and `sameSite` cookie configuration for Inertia
 - 📦 **Body Size Limits** - 10kb request body limits to prevent payload DoS
 - 🔐 **Environment Validation** - Zod-powered startup validation of all required env vars
 - 🔄 **Graceful Shutdown** - Clean SIGTERM/SIGINT handling with DB connection cleanup
@@ -116,8 +116,9 @@ lumina/
 │   │   ├── database.ts              # Database configuration
 │   │   └── env.ts                   # Centralized environment validation (Zod)
 │   ├── controllers/
-│   │   ├── AuthController.ts        # Authentication endpoints (login/refresh/logout)
-│   │   └── UserController.ts        # User CRUD operations
+│   │   ├── AuthController.ts        # Authentication logic
+│   │   ├── UserController.ts        # User CRUD operations
+│   │   └── WebController.ts         # Inertia view controller
 │   ├── models/
 │   │   ├── index.ts                 # Database connection & model loader
 │   │   ├── User.ts                  # User model with attributes
@@ -128,7 +129,9 @@ lumina/
 │   │   ├── RouteService.ts          # Route registration
 │   │   └── StorageService.ts        # File upload handler (hardened)
 │   ├── middlewares/
-│   │   ├── Authentication.ts        # JWT verification
+│   │   ├── ApiAuth.ts               # Header-based API auth with silent refresh
+│   │   ├── WebAuth.ts               # Cookie-based auth for Inertia/Web
+│   │   ├── InertiaMiddleware.ts     # Injects res.inertia() helper
 │   │   ├── Csrf.ts                  # CSRF protection (double-submit cookie)
 │   │   ├── RequestLogger.ts         # HTTP request logging
 │   │   ├── Validator.ts             # Zod validation
@@ -153,11 +156,12 @@ lumina/
 │   │   ├── express/
 │   │   │   └── index.d.ts           # Express extensions
 │   │   └── Pagination.d.ts          # Pagination types
-│   └── utils/
-│       ├── ApiResponse.ts           # Standard API responses
-│       ├── Hash.ts                  # Password hashing
-│       ├── Logger.ts                # Winston logger
-│       └── Paginator.ts             # Pagination helper
+│   ├── utils/
+│   │   ├── ApiResponse.ts           # Standard API responses
+│   │   ├── Hash.ts                  # Password hashing
+│   │   ├── Logger.ts                # Winston logger
+│   │   └── Paginator.ts             # Pagination helper
+│   └── server.ts                    # Application entry point
 ├── scripts/
 │   ├── create-model.ts              # Model generator
 │   ├── create-migration.ts          # Migration generator
@@ -176,7 +180,6 @@ lumina/
 │   ├── status.html                  # System status dashboard
 │   ├── maintenance.html             # Maintenance page
 │   └── 404.html                     # Page not found
-├── server.ts                        # Application entry point
 ├── vitest.config.ts                 # Vitest test configuration
 ├── tsconfig.json                    # TypeScript configuration
 ├── package.json                     # Project dependencies
