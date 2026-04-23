@@ -13,9 +13,10 @@ import crypto from 'crypto';
  *    that the x-csrf-token header matches the csrf_token cookie
  */
 class Csrf {
-  private cookieName = 'csrf_token';
-  private headerName = 'x-csrf-token';
+  private cookieName = 'XSRF-TOKEN';
+  private headerName = 'x-xsrf-token';
   private safeMethods = ['GET', 'HEAD', 'OPTIONS'];
+
 
   /**
    * Generate and set CSRF token on safe requests.

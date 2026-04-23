@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import WebController from '../controllers/WebController.js';
+import Csrf from '../middlewares/Csrf.js';
 
 class WebRoutes {
   public router: Router;
@@ -10,13 +11,12 @@ class WebRoutes {
   }
 
   protected initializeRoutes(): void {
-    // Home Route
+    // Apply CSRF protection to all web routes
+    this.router.use(Csrf.handle);
+
+    // --- Public Routes ---
     this.router.get('/', WebController.index);
-
-    // Status Route
     this.router.get('/status', WebController.status);
-
-    // Health Check (for container/orchestration probes)
     this.router.get('/health', WebController.health);
 
   }
