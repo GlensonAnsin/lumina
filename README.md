@@ -489,7 +489,6 @@ class User extends BaseModel<UserAttributes, UserCreationAttributes> {
 ```
 
 > **Soft Deletes:** Calling `user.destroy()` sets `deleted_at` instead of physically removing the row. All `findAll`/`findOne` queries automatically filter out deleted records. Use `{ paranoid: false }` to include them.
-```
 
 ### 5. Middleware Pipeline
 
