@@ -44,11 +44,13 @@ A production-grade monolithic starter kit featuring Express, React, Vite, and In
 - ⚡ **Rate Limiting** - Global and auth-specific request rate limits
 - 🔑 **CORS** - Configurable origin restriction via `CORS_ORIGIN` env var
 - 🛠️ **Maintenance Mode** - Graceful application downtime with bypass capability
-- 🛡️ **CSRF Protection** - Double-submit cookie pattern for web routes
+- 🛡️ **CSRF Protection** - Optimized double-submit cookie pattern with token reuse and `sameSite: lax`
 - 🍪 **Secure Cookies** - `httpOnly`, `secure`, and `sameSite` cookie configuration for Inertia
 - 📦 **Body Size Limits** - 10kb request body limits to prevent payload DoS
 - 🔐 **Environment Validation** - Zod-powered startup validation of all required env vars
 - 🔄 **Graceful Shutdown** - Clean SIGTERM/SIGINT handling with DB connection cleanup
+- 🌐 **Global Shared Data** - Auth state and flash messages automatically shared to all Inertia pages
+- 📝 **Form Validation Parity** - Validation errors automatically redirect back with flashed errors for both Inertia and standard web forms
 
 ### Database Features
 - 📊 **Migrations** - Database schema version control with Umzug
@@ -56,6 +58,7 @@ A production-grade monolithic starter kit featuring Express, React, Vite, and In
 - 🏭 **Factories** - Generate realistic test data with Faker.js
 - 📄 **Pagination** - Built-in pagination utility with metadata
 - 🔗 **Model Relationships** - Support for Sequelize associations
+- 🗑️ **Soft Deletes (BaseModel)** - Centralized `BaseModel` with automatic `paranoid`, `timestamps`, and `underscored` defaults
 
 ### Developer Experience
 - 📁 **Code Generators** - CLI scripts to scaffold Models, Migrations (with automated model scanning), Factories, and Controllers
@@ -120,6 +123,7 @@ lumina/
 │   │   ├── UserController.ts        # User CRUD operations
 │   │   └── WebController.ts         # Inertia view controller
 │   ├── models/
+│   │   ├── BaseModel.ts             # Base model with soft deletes & defaults
 │   │   ├── index.ts                 # Database connection & model loader
 │   │   ├── User.ts                  # User model with attributes
 │   │   └── RefreshToken.ts          # Refresh token model
@@ -155,6 +159,7 @@ lumina/
 │   ├── types/
 │   │   ├── express/
 │   │   │   └── index.d.ts           # Express extensions
+│   │   ├── express-inertia.d.ts     # Inertia type definitions
 │   │   └── Pagination.d.ts          # Pagination types
 │   ├── utils/
 │   │   ├── ApiResponse.ts           # Standard API responses
@@ -436,26 +441,31 @@ class UserController {
 export default new UserController();
 ```
 
-### 4. Models (Sequelize ORM)
+### 4. Models (Sequelize ORM) & BaseModel
 
-Type-safe database models with attributes and associations:
+All models extend a centralized `BaseModel` that automatically enables soft deletes, timestamps, and underscored naming:
+
+```typescript
+// src/models/BaseModel.ts
+export default class BaseModel<TAttributes, TCreationAttributes>
+  extends Model<TAttributes, TCreationAttributes> {
+
+  public static init(attributes, options) {
+    return super.init(attributes, {
+      paranoid: true,      // Soft deletes (automatic WHERE deleted_at IS NULL)
+      timestamps: true,    // created_at, updated_at
+      underscored: true,   // snake_case columns
+      ...options,
+    });
+  }
+}
+```
+
+Models simply extend `BaseModel` instead of `Model`:
 
 ```typescript
 // src/models/User.ts
-interface UserAttributes {
-  id: number;
-  firstname: string;
-  lastname: string;
-  email: string;
-  password: string;
-  role: string;
-  avatar: string | null;
-  created_at?: Date;
-  updated_at?: Date;
-  deleted_at?: Date | null;
-}
-
-class User extends Model<UserAttributes, UserCreationAttributes> {
+class User extends BaseModel<UserAttributes, UserCreationAttributes> {
   declare id: number;
   declare firstname: string;
   // ...
@@ -472,12 +482,13 @@ class User extends Model<UserAttributes, UserCreationAttributes> {
       sequelize,
       modelName: 'User',
       tableName: 'users',
-      paranoid: true, // Soft deletes
-      timestamps: true,
-      underscored: true, // created_at instead of createdAt
+      // No need for paranoid, timestamps, underscored — inherited from BaseModel!
     });
   }
 }
+```
+
+> **Soft Deletes:** Calling `user.destroy()` sets `deleted_at` instead of physically removing the row. All `findAll`/`findOne` queries automatically filter out deleted records. Use `{ paranoid: false }` to include them.
 ```
 
 ### 5. Middleware Pipeline
@@ -486,20 +497,48 @@ Middleware processes requests in order before reaching controllers:
 
 ```typescript
 // server.ts
-app.use(Maintenance.handle);         // Check maintenance mode
-app.use(helmet());                   // Security headers
+app.use(Maintenance.handle);             // Check maintenance mode
+app.use(helmet());                       // Security headers
 app.use(cors({ origin: env.CORS_ORIGIN })); // Restricted CORS
-app.use(compression());             // Gzip compression
-app.use(cookieParser());            // Cookie parsing
+app.use(compression());                 // Gzip compression
+app.use(cookieParser());                // Cookie parsing
 app.use(express.json({ limit: '10kb' }));  // Parse JSON (size limited)
-app.use(Limiter.global);            // Rate limiting
-app.use(RequestLogger.handle);      // HTTP request logging
-RouteService.boot(app);             // Load routes
-app.use(ExceptionHandler.notFound); // 404 handler (HTML + JSON)
-app.use(ExceptionHandler.handle);   // Error handler
+app.use(WebAuth.detect);                // Silent user detection (populates req.user)
+app.use(InertiaMiddleware.handle);      // Inertia setup + global shared data
+app.use(Limiter.global);                // Rate limiting
+app.use(RequestLogger.handle);          // HTTP request logging
+RouteService.boot(app);                 // Load routes
+app.use(ExceptionHandler.notFound);     // 404 handler (HTML + JSON)
+app.use(ExceptionHandler.handle);       // Error handler
 ```
 
-### 6. Factories (Data Generation)
+### 6. Global Shared Data (Inertia)
+
+The `InertiaMiddleware` automatically shares the following props to **every** Inertia page:
+
+```typescript
+// Available in any React component via usePage().props
+{
+  auth: {
+    user: { id, email, role } | null  // Authenticated user or null
+  },
+  flash: {
+    success: string | null,
+    error: string | null,
+    info: string | null,
+    warning: string | null
+  },
+  errors: { field: 'message', ... }    // Validation errors (auto-cleared)
+}
+```
+
+**Flash messages** from controllers:
+```typescript
+res.flash('success', 'Profile updated!');
+res.flash('error', 'Something went wrong.');
+```
+
+### 7. Factories (Data Generation)
 
 Generate realistic test data with Faker.js:
 
@@ -524,7 +563,7 @@ class UserFactory extends Factory<User> {
 await UserFactory.createMany(20);
 ```
 
-### 7. Pagination
+### 8. Pagination
 
 Built-in pagination with metadata:
 
@@ -893,16 +932,21 @@ this.router.get('/me', Authentication.handle, AuthController.me);
 
 ### CSRF Protection
 
-Web routes are protected from Cross-Site Request Forgery using a **double-submit cookie pattern**:
+Web routes are protected from Cross-Site Request Forgery using an optimized **double-submit cookie pattern**:
 
 ```
-1. Browser makes GET request → Server sets csrf_token cookie
-2. Client-side JS reads csrf_token cookie
-3. On POST/PUT/DELETE → Client sends cookie value in x-csrf-token header
+1. Browser makes GET request → Server sets XSRF-TOKEN cookie (reuses existing if present)
+2. Client-side JS reads XSRF-TOKEN cookie (httpOnly: false)
+3. On POST/PUT/DELETE → Client sends cookie value in X-XSRF-TOKEN header
 4. Server validates header matches cookie
 ```
 
-> **Note:** API routes using Bearer token authentication are inherently CSRF-safe and don't need this protection.
+**Optimizations:**
+- **Token Reuse:** Existing tokens are reused across requests, preventing multi-tab and concurrent request conflicts
+- **`sameSite: lax`:** Allows the token to persist through top-level navigations from external sites
+- **24-hour expiry:** Reduces expired token errors during long sessions
+
+> **Note:** API routes using Bearer token authentication are inherently CSRF-safe and don't need this protection. Inertia.js (via Axios) automatically reads the `XSRF-TOKEN` cookie and sends it as the `X-XSRF-TOKEN` header.
 
 ### Password Security
 
@@ -1029,7 +1073,17 @@ this.router.post(
 );
 ```
 
-### Validation Error Response
+### Validation Behavior
+
+The `Validator` middleware automatically adapts its response based on the request type:
+
+| Request Type | Behavior |
+|---|---|
+| **API** (`Accept: application/json`) | Returns 422 JSON with field-level errors |
+| **Inertia** (`X-Inertia` header) | Redirects back with errors flashed to `inertia_errors` cookie |
+| **Standard Web** (browser form) | Redirects back with errors flashed to `inertia_errors` cookie |
+
+### API Validation Error Response
 
 ```json
 {
@@ -1047,6 +1101,22 @@ this.router.post(
     }
   ]
 }
+```
+
+### Inertia/Web Form Errors
+
+For Inertia requests, errors are automatically available in the `useForm` hook:
+
+```tsx
+import { useForm } from '@inertiajs/react';
+
+const { data, setData, post, errors, processing } = useForm({
+  email: '',
+  password: '',
+});
+
+// errors.email → "Invalid email address"
+// errors.password → "Password must be at least 8 characters"
 ```
 
 ---
@@ -1335,9 +1405,10 @@ mkdir -p public/uploads
 **Solution:**
 ```bash
 # For web routes making POST/PUT/DELETE:
-# 1. Read the csrf_token cookie value
-# 2. Include it in the x-csrf-token header
+# 1. Read the XSRF-TOKEN cookie value
+# 2. Include it in the X-XSRF-TOKEN header
 # API routes using Bearer tokens don't need CSRF tokens
+# Inertia.js (Axios) handles this automatically
 ```
 
 #### Issue: Rate Limit (429) Error
