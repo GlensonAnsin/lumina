@@ -57,9 +57,38 @@ export default class InertiaMiddleware {
     return inertiaMiddleware(req, res, () => {
         // Add res.inertia helper to the response object
         res.inertia = (component: string, props: any = {}) => {
-            // @ts-ignore - req.Inertia is added by inertia-node
             req.Inertia.render({ component, props });
         };
+
+        // Add res.flash helper
+        res.flash = (type: string, message: string) => {
+          res.cookie(`flash_${type}`, message, { 
+            httpOnly: true, 
+            maxAge: 60000 // 1 minute is enough for a flash message
+          });
+        };
+
+        // Share Global Props
+        req.Inertia.shareProps({
+          auth: {
+            user: req.user || null,
+          },
+          flash: {
+            success: req.cookies?.flash_success || null,
+            error: req.cookies?.flash_error || null,
+            info: req.cookies?.flash_info || null,
+            warning: req.cookies?.flash_warning || null,
+          },
+          errors: req.cookies?.inertia_errors ? JSON.parse(req.cookies.inertia_errors) : {}
+        });
+
+        // Clear flash cookies after sharing
+        if (req.cookies?.flash_success) res.clearCookie('flash_success');
+        if (req.cookies?.flash_error) res.clearCookie('flash_error');
+        if (req.cookies?.flash_info) res.clearCookie('flash_info');
+        if (req.cookies?.flash_warning) res.clearCookie('flash_warning');
+        if (req.cookies?.inertia_errors) res.clearCookie('inertia_errors');
+
         next();
     });
   }

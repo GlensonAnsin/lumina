@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import env from '../config/env.js';
 import AuthService from '../services/AuthService.js';
+import Logger from '../utils/Logger.js';
+import { UserPayload } from '../types/express/index.js';
 
 
 class WebAuth {
@@ -22,7 +24,7 @@ class WebAuth {
 
     try {
       // Verify access token
-      const decoded = jwt.verify(accessToken, env.JWT_SECRET);
+      const decoded = jwt.verify(accessToken, env.JWT_SECRET) as UserPayload;
       req.user = decoded;
       next();
     } catch (error) {
@@ -32,6 +34,59 @@ class WebAuth {
       }
       res.clearCookie('access_token');
       return res.redirect('/login');
+    }
+  }
+
+  /**
+   * Middleware to detect the user but allow the request to continue.
+   * Useful for public pages that need to know if a user is logged in.
+   */
+  public async detect(req: Request, res: Response, next: NextFunction) {
+    const accessToken = req.cookies?.access_token;
+    const refreshToken = req.cookies?.refresh_token;
+
+    if (!accessToken) {
+      if (refreshToken) {
+        try {
+          const { accessToken: newToken } = await AuthService.refresh(refreshToken);
+          res.cookie('access_token', newToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000,
+          });
+          const decoded = jwt.verify(newToken, env.JWT_SECRET) as UserPayload;
+          req.user = decoded;
+        } catch (error) {
+          // Silent failure
+          Logger.debug('Silent refresh failed in detect middleware');
+        }
+      }
+      return next();
+    }
+
+    try {
+      const decoded = jwt.verify(accessToken, env.JWT_SECRET) as UserPayload;
+      req.user = decoded;
+      next();
+    } catch (error) {
+      // Access token invalid/expired, try silent refresh
+      if (refreshToken) {
+        try {
+          const { accessToken: newToken } = await AuthService.refresh(refreshToken);
+          res.cookie('access_token', newToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000,
+          });
+          const decoded = jwt.verify(newToken, env.JWT_SECRET) as UserPayload;
+          req.user = decoded;
+        } catch (err) {
+          Logger.debug('Silent refresh failed in detect middleware after verify error');
+        }
+      }
+      next();
     }
   }
 
@@ -51,7 +106,7 @@ class WebAuth {
       });
 
       // Verify the new token to get user data
-      const decoded = jwt.verify(accessToken, env.JWT_SECRET);
+      const decoded = jwt.verify(accessToken, env.JWT_SECRET) as UserPayload;
       req.user = decoded;
 
       next();

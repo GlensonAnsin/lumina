@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import ApiResponse from '../utils/ApiResponse.js';
 import env from '../config/env.js';
 import AuthService from '../services/AuthService.js';
+import { UserPayload } from '../types/express/index.js';
 
 class ApiAuth {
   /**
@@ -19,7 +20,7 @@ class ApiAuth {
 
     try {
       // Verify access token
-      const decoded = jwt.verify(accessToken, env.JWT_SECRET);
+      const decoded = jwt.verify(accessToken, env.JWT_SECRET) as UserPayload;
       req.user = decoded;
       next();
     } catch (error: any) {
@@ -40,7 +41,7 @@ class ApiAuth {
       const { accessToken } = await AuthService.refresh(token);
 
       // Verify the new token
-      const decoded = jwt.verify(accessToken, env.JWT_SECRET);
+      const decoded = jwt.verify(accessToken, env.JWT_SECRET) as UserPayload;
       req.user = decoded;
 
       // Add the new token to the response header so the client can update it

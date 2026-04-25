@@ -1,4 +1,5 @@
-import { Model, DataTypes, Sequelize, Optional } from 'sequelize';
+import { DataTypes, Sequelize, Optional } from 'sequelize';
+import BaseModel from './BaseModel.js';
 
 interface RefreshTokenAttributes {
   id: number;
@@ -8,11 +9,12 @@ interface RefreshTokenAttributes {
   revoked: boolean;
   created_at?: Date;
   updated_at?: Date;
+  deleted_at?: Date | null;
 }
 
-export interface RefreshTokenCreationAttributes extends Optional<RefreshTokenAttributes, 'id' | 'revoked' | 'created_at' | 'updated_at'> {}
+export interface RefreshTokenCreationAttributes extends Optional<RefreshTokenAttributes, 'id' | 'revoked' | 'created_at' | 'updated_at' | 'deleted_at'> {}
 
-class RefreshToken extends Model<RefreshTokenAttributes, RefreshTokenCreationAttributes> implements RefreshTokenAttributes {
+class RefreshToken extends BaseModel<RefreshTokenAttributes, RefreshTokenCreationAttributes> implements RefreshTokenAttributes {
   declare id: number;
   declare user_id: number;
   declare token: string;
@@ -20,6 +22,7 @@ class RefreshToken extends Model<RefreshTokenAttributes, RefreshTokenCreationAtt
   declare revoked: boolean;
   declare created_at: Date;
   declare updated_at: Date;
+  declare deleted_at: Date | null;
 
   static initModel(sequelize: Sequelize) {
     RefreshToken.init(
@@ -52,8 +55,6 @@ class RefreshToken extends Model<RefreshTokenAttributes, RefreshTokenCreationAtt
         sequelize,
         modelName: 'RefreshToken',
         tableName: 'refresh_tokens',
-        timestamps: true,
-        underscored: true,
       }
     );
   }

@@ -13,6 +13,7 @@ import Maintenance from './middlewares/Maintenance.js';
 import RequestLogger from './middlewares/RequestLogger.js';
 import env from './config/env.js';
 import InertiaMiddleware from './middlewares/InertiaMiddleware.js';
+import WebAuth from './middlewares/WebAuth.js';
 
 const app: Application = express();
 const PORT = env.APP_PORT;
@@ -20,7 +21,6 @@ const PORT = env.APP_PORT;
 // ==========================
 // Global Middleware
 // ==========================
-app.use(InertiaMiddleware.handle);
 app.use(Maintenance.handle);
 app.use(helmet({
   crossOriginResourcePolicy: false,
@@ -34,6 +34,11 @@ app.use(compression());
 app.use(cookieParser());
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// User detection and Inertia
+app.use(WebAuth.detect.bind(WebAuth));
+app.use(InertiaMiddleware.handle);
+
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(Limiter.global);
 app.use(RequestLogger.handle);
