@@ -1,4 +1,5 @@
-import { Model, DataTypes, Sequelize, Optional } from 'sequelize';
+import { DataTypes, Sequelize, Optional } from 'sequelize';
+import BaseModel from './BaseModel.js';
 import Hash from '../utils/Hash.js';
 
 interface UserAttributes {
@@ -16,7 +17,7 @@ interface UserAttributes {
 
 export interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'role' | 'avatar'> {}
 
-class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+class User extends BaseModel<UserAttributes, UserCreationAttributes> implements UserAttributes {
   declare id: number;
   declare firstname: string;
   declare lastname: string;
@@ -68,9 +69,6 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
         sequelize,
         modelName: 'User',
         tableName: 'users',
-        paranoid: true,
-        timestamps: true,
-        underscored: true,
         hooks: {
           beforeCreate: async (user: User) => {
             if (user.password) {

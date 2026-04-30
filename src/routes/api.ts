@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import UserController from '../controllers/UserController.js';
-import Authentication from '../middlewares/Authentication.js';
+import ApiAuth from '../middlewares/ApiAuth.js';
 import Validator from '../middlewares/Validator.js';
 import UserRequest from '../requests/UserRequest.js';
 import AuthController from '../controllers/AuthController.js';
@@ -19,17 +19,24 @@ class ApiRoutes {
    * Define all API routes here.
    */
   protected initializeRoutes(): void {
-    // Auth
+    // --- Public Routes ---
     this.router.post('/login', Limiter.auth, AuthController.login);
     this.router.post('/refresh', AuthController.refresh);
-    this.router.post('/logout', Authentication.handle, AuthController.logout);
 
-    // Protected
-    this.router.get('/me', Authentication.handle, AuthController.me);
-    this.router.get('/users', Authentication.handle, UserController.index);
-    this.router.post('/users', Validator.validate(UserRequest.store), UserController.store);
-    this.router.post('/users/avatar', Authentication.handle, StorageService.uploader.single('avatar'), UserController.uploadAvatar);
+    // --- Protected Routes Group ---
+    const protectedRouter = Router();
+    protectedRouter.use(ApiAuth.handle);
+
+    protectedRouter.post('/logout', AuthController.logout);
+    protectedRouter.get('/me', AuthController.me);
+    protectedRouter.get('/users', UserController.index);
+    protectedRouter.post('/users', Validator.validate(UserRequest.store), UserController.store);
+    protectedRouter.post('/users/avatar', StorageService.uploader.single('avatar'), UserController.uploadAvatar);
+
+    // Mount the group
+    this.router.use(protectedRouter);
   }
 }
+
 
 export default new ApiRoutes().router;

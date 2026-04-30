@@ -18,11 +18,11 @@ class Maintenance {
       res.status(503);
       res.setHeader('Retry-After', '60');
 
-      if (req.accepts('html')) {
-        const viewPath = path.join(process.cwd(), 'views', 'maintenance.html');
-        if (fs.existsSync(viewPath)) {
-          return res.sendFile(viewPath);
-        }
+      if (req.accepts('html') && !req.originalUrl.startsWith('/api')) {
+        // @ts-ignore - inertia is injected by middleware
+        return res.inertia('Maintenance', {
+          message: 'System is currently under maintenance. Please try again later.'
+        });
       }
 
       return ApiResponse.error(res, 'System is currently under maintenance. Please try again later.', 503);

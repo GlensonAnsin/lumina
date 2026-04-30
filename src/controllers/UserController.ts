@@ -35,7 +35,11 @@ class UserController {
       // 1. Get the file path relative to your server
       const filePath = `uploads/${req.file.filename}`;
 
-      // 2. Update the user in the DB (assuming you have req.user from AuthMiddleware)
+      if (!req.user) {
+        return ApiResponse.error(res, 'Unauthorized', 401);
+      }
+
+      // 2. Update the user in the DB
       await UserService.updateAvatar(req.user.id, filePath);
 
       // 3. Return success

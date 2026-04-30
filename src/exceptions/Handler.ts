@@ -11,10 +11,10 @@ class ExceptionHandler {
    */
   notFound(req: Request, res: Response, next: NextFunction) {
     if (req.accepts('html') && !req.originalUrl.startsWith('/api')) {
-      const viewPath = path.join(process.cwd(), 'views', '404.html');
-      if (fs.existsSync(viewPath)) {
-        return res.status(404).sendFile(viewPath);
-      }
+      // @ts-ignore - inertia is injected by middleware
+      return res.status(404).inertia('Errors/404', { 
+        url: req.originalUrl 
+      });
     }
 
     return ApiResponse.error(res, 'Route not found', 404);

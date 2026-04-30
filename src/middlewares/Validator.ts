@@ -13,6 +13,22 @@ class Validator {
         next();
       } catch (error) {
         if (error instanceof ZodError) {
+          // Check if it's an Inertia request or standard Web request
+          if (req.header('X-Inertia') || req.accepts('html')) {
+            const errors: Record<string, string> = {};
+            error.issues.forEach((err) => {
+              const path = err.path.join('.');
+              errors[path] = err.message;
+            });
+
+            res.cookie('inertia_errors', JSON.stringify(errors), { 
+              httpOnly: true, 
+              maxAge: 60000 
+            });
+            
+            return res.redirect('back');
+          }
+
           const formattedErrors = error.issues.map((err) => ({
             field: err.path.join('.'),
             message: err.message,
