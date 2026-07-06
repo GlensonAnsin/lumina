@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import UserController from '../controllers/UserController.js';
 import ApiAuth from '../middlewares/ApiAuth.js';
+import RoleGuard from '../middlewares/RoleGuard.js';
 import Validator from '../middlewares/Validator.js';
 import UserRequest from '../requests/UserRequest.js';
 import AuthController from '../controllers/AuthController.js';
@@ -29,8 +30,8 @@ class ApiRoutes {
 
     protectedRouter.post('/logout', AuthController.logout);
     protectedRouter.get('/me', AuthController.me);
-    protectedRouter.get('/users', UserController.index);
-    protectedRouter.post('/users', Validator.validate(UserRequest.store), UserController.store);
+    protectedRouter.get('/users', RoleGuard.allow('admin'), UserController.index);
+    protectedRouter.post('/users', RoleGuard.allow('admin'), Validator.validate(UserRequest.store), UserController.store);
     protectedRouter.post('/users/avatar', StorageService.uploader.single('avatar'), UserController.uploadAvatar);
 
     // Mount the group

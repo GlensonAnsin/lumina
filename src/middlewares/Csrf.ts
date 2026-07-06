@@ -24,25 +24,20 @@ class Csrf {
    */
   public handle = (req: Request, res: Response, next: NextFunction) => {
     if (this.safeMethods.includes(req.method)) {
-      // Reuse existing token if present
-      let token = req.cookies?.[this.cookieName];
-      
-      if (!token) {
-        token = crypto.randomBytes(32).toString('hex');
-      }
+      const token = crypto.randomBytes(32).toString('hex');
 
       res.cookie(this.cookieName, token, {
         httpOnly: false, // Must be readable by client-side JS
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', 
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 1000, // 1 hour
       });
       return next();
     }
 
     // Validate CSRF token on state-changing methods
     const cookieToken = req.cookies?.[this.cookieName];
-    const headerToken = (req.headers[this.headerName] || req.headers['X-XSRF-TOKEN']) as string;
+    const headerToken = req.headers[this.headerName] as string;
 
     if (!cookieToken || !headerToken || cookieToken !== headerToken) {
       return res.status(403).json({

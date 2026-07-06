@@ -9,7 +9,7 @@ class Validator {
   public validate(schema: ZodType<any>) {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
-        schema.parse(req.body);
+        req.body = schema.parse(req.body);
         next();
       } catch (error) {
         if (error instanceof ZodError) {
