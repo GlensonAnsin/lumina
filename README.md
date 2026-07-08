@@ -44,7 +44,8 @@ A production-grade monolithic starter kit featuring Express, React, Vite, and In
 - ⚡ **Rate Limiting** - Global and auth-specific request rate limits
 - 🔑 **CORS** - Configurable origin restriction via `CORS_ORIGIN` env var
 - 🛠️ **Maintenance Mode** - Graceful application downtime with bypass capability
-- 🛡️ **CSRF Protection** - Optimized double-submit cookie pattern with token reuse and `sameSite: lax`
+- 🛡️ **CSRF Protection** - Double-submit cookie pattern with a fresh per-request token and `sameSite: strict`
+- 👮 **Role-Based Access Control** - `RoleGuard` middleware restricts sensitive routes (e.g. user management) to specific roles
 - 🍪 **Secure Cookies** - `httpOnly`, `secure`, and `sameSite` cookie configuration for Inertia
 - 📦 **Body Size Limits** - 10kb request body limits to prevent payload DoS
 - 🔐 **Environment Validation** - Zod-powered startup validation of all required env vars
@@ -139,6 +140,7 @@ lumina/
 │   │   ├── Csrf.ts                  # CSRF protection (double-submit cookie)
 │   │   ├── RequestLogger.ts         # HTTP request logging
 │   │   ├── Validator.ts             # Zod validation
+│   │   ├── RoleGuard.ts             # Role-based access control
 │   │   ├── Limiter.ts               # Rate limiting
 │   │   └── Maintenance.ts           # Maintenance mode
 │   ├── requests/
@@ -687,11 +689,13 @@ Authorization: Bearer <token>
 
 ### User Endpoints
 
-#### List Users (Paginated)
+#### List Users (Paginated) — admin only
 ```http
 GET /api/users?page=1&limit=15
 Authorization: Bearer <token>
 ```
+
+> Requires the authenticated user's JWT `role` to be `admin` (enforced by `RoleGuard`). Non-admin users receive a `403 Forbidden`.
 
 **Response (200):**
 ```json
@@ -721,9 +725,10 @@ Authorization: Bearer <token>
 }
 ```
 
-#### Create User
+#### Create User — admin only
 ```http
 POST /api/users
+Authorization: Bearer <token>
 Content-Type: application/json
 
 {
@@ -733,6 +738,8 @@ Content-Type: application/json
   "password": "password123"
 }
 ```
+
+> Requires the authenticated user's JWT `role` to be `admin` (enforced by `RoleGuard`). Fields other than `firstname`, `lastname`, `email`, and `password` are stripped by validation, so `role` cannot be set by the client — new users always default to `role: 'user'`.
 
 **Response (201):**
 ```json
@@ -923,27 +930,42 @@ npm run up
 
 ```typescript
 // src/routes/api.ts
-import Authentication from '../middlewares/Authentication.js';
+import ApiAuth from '../middlewares/ApiAuth.js';
 
 // Protected route
-this.router.get('/me', Authentication.handle, AuthController.me);
+this.router.get('/me', ApiAuth.handle, AuthController.me);
 ```
+
+### Role-Based Access Control
+
+`RoleGuard` restricts a route to users whose JWT `role` is in an allowed list. It must run after `ApiAuth.handle`, which populates `req.user`:
+
+```typescript
+// src/routes/api.ts
+import RoleGuard from '../middlewares/RoleGuard.js';
+
+protectedRouter.use(ApiAuth.handle);
+protectedRouter.get('/users', RoleGuard.allow('admin'), UserController.index);
+protectedRouter.post('/users', RoleGuard.allow('admin'), Validator.validate(UserRequest.store), UserController.store);
+```
+
+Requests from an authenticated user whose role isn't in the allowed list receive a `403 Forbidden`.
 
 ### CSRF Protection
 
-Web routes are protected from Cross-Site Request Forgery using an optimized **double-submit cookie pattern**:
+Web routes are protected from Cross-Site Request Forgery using a **double-submit cookie pattern**:
 
 ```
-1. Browser makes GET request → Server sets XSRF-TOKEN cookie (reuses existing if present)
+1. Browser makes GET request → Server sets a fresh XSRF-TOKEN cookie
 2. Client-side JS reads XSRF-TOKEN cookie (httpOnly: false)
 3. On POST/PUT/DELETE → Client sends cookie value in X-XSRF-TOKEN header
 4. Server validates header matches cookie
 ```
 
-**Optimizations:**
-- **Token Reuse:** Existing tokens are reused across requests, preventing multi-tab and concurrent request conflicts
-- **`sameSite: lax`:** Allows the token to persist through top-level navigations from external sites
-- **24-hour expiry:** Reduces expired token errors during long sessions
+**Security settings:**
+- **Fresh token per request:** A new random token is generated on every safe (GET/HEAD/OPTIONS) request rather than reused, minimizing the exposure window if a token is ever leaked
+- **`sameSite: strict`:** The cookie is never sent on cross-site requests, including top-level navigations from external sites
+- **1-hour expiry:** Limits how long a captured token remains valid
 
 > **Note:** API routes using Bearer token authentication are inherently CSRF-safe and don't need this protection. Inertia.js (via Axios) automatically reads the `XSRF-TOKEN` cookie and sends it as the `X-XSRF-TOKEN` header.
 
@@ -1004,7 +1026,7 @@ The server handles `SIGTERM` and `SIGINT` signals for clean shutdown:
 // src/routes/api.ts
 this.router.post(
   '/users/avatar',
-  Authentication.handle,
+  ApiAuth.handle,
   StorageService.uploader.single('avatar'),
   UserController.uploadAvatar
 );
@@ -1285,8 +1307,8 @@ const secret = process.env.JWT_SECRET || 'default_secret';
 ### 5. Protect Sensitive Routes
 
 ```typescript
-// ✅ GOOD - Protected route
-this.router.get('/users', Authentication.handle, UserController.index);
+// ✅ GOOD - Protected and role-gated route
+this.router.get('/users', ApiAuth.handle, RoleGuard.allow('admin'), UserController.index);
 
 // ❌ BAD - Public route
 this.router.get('/users', UserController.index);
