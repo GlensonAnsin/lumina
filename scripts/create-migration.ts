@@ -165,6 +165,15 @@ class MigrationGenerator {
   }
 
   /**
+   * Converts a PascalCase string to snake_case.
+   */
+  private toSnakeCase(str: string): string {
+    return str
+      .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+      .toLowerCase();
+  }
+
+  /**
    * Basic pluralization: adds trailing 's'.
    */
   private pluralize(word: string): string {
@@ -203,8 +212,15 @@ class MigrationGenerator {
     const columns = new Map<string, ColumnDefinition>();
     const associations: string[] = [];
 
-    // Detect paranoid & timestamps from model options
-    const paranoid = /paranoid:\s*true/.test(content);
+    // Detect paranoid & timestamps from model options.
+    // Every model scaffolded by Lumina extends BaseModel, which injects
+    // `paranoid: true` into init() by default (see BaseModel.ts) — that
+    // default never appears as literal text in the model's own file, so a
+    // model extending BaseModel must be treated as paranoid unless it
+    // explicitly opts out with `paranoid: false`.
+    const explicitlyNotParanoid = /paranoid:\s*false/.test(content);
+    const extendsBaseModel = /extends\s+BaseModel/.test(content);
+    const paranoid = !explicitlyNotParanoid && (extendsBaseModel || /paranoid:\s*true/.test(content));
     const timestamps = /timestamps:\s*true/.test(content) || !/timestamps:\s*false/.test(content);
 
     // Extract the init() block - find the column definitions object
@@ -299,6 +315,23 @@ class MigrationGenerator {
   }
 
   /**
+   * Resolves the actual tableName for a referenced model by reading its file
+   * (handles irregular/uncountable table names like 'staff'), falling back to
+   * a pluralized snake_case guess if the model file can't be found/parsed.
+   */
+  private resolveTableNameForModel(modelName: string): string {
+    const modelPath = path.join(this.modelsDir, `${modelName}.ts`);
+    if (fs.existsSync(modelPath)) {
+      const content = fs.readFileSync(modelPath, 'utf-8');
+      const tableNameMatch = content.match(/tableName:\s*'(\w+)'/);
+      if (tableNameMatch) {
+        return tableNameMatch[1];
+      }
+    }
+    return this.pluralize(this.toSnakeCase(modelName));
+  }
+
+  /**
    * Generates the migration file content by scanning the model.
    */
   private generateFromModel(modelPath: string): string {
@@ -308,9 +341,7 @@ class MigrationGenerator {
     const fkMap = new Map<string, string>();
     for (const assoc of associations) {
       const [fk, modelName] = assoc.split(':');
-      // Pluralize the lowercased model name to guess target table
-      const targetTable = this.pluralize(modelName.toLowerCase());
-      fkMap.set(fk, targetTable);
+      fkMap.set(fk, this.resolveTableNameForModel(modelName));
     }
 
     // Build column definitions string
@@ -318,14 +349,23 @@ class MigrationGenerator {
     const indent = '      ';
 
     for (const [name, col] of columns) {
-      // Skip id — we'll always add it manually with BIGINT for migration
+      // id is special-cased: mirror the model's actual PK type (UUID vs integer)
+      // instead of always assuming an auto-incrementing integer.
       if (name === 'id') {
-        lines.push(`${indent}id: {`);
-        lines.push(`${indent}  allowNull: false,`);
-        lines.push(`${indent}  autoIncrement: true,`);
-        lines.push(`${indent}  primaryKey: true,`);
-        lines.push(`${indent}  type: DataTypes.BIGINT,`);
-        lines.push(`${indent}},`);
+        if (col.type === 'DataTypes.UUID') {
+          lines.push(`${indent}id: {`);
+          lines.push(`${indent}  type: DataTypes.UUID,`);
+          lines.push(`${indent}  defaultValue: Sequelize.UUIDV4,`);
+          lines.push(`${indent}  primaryKey: true,`);
+          lines.push(`${indent}},`);
+        } else {
+          lines.push(`${indent}id: {`);
+          lines.push(`${indent}  allowNull: false,`);
+          lines.push(`${indent}  autoIncrement: true,`);
+          lines.push(`${indent}  primaryKey: true,`);
+          lines.push(`${indent}  type: DataTypes.BIGINT,`);
+          lines.push(`${indent}},`);
+        }
         continue;
       }
 
@@ -462,11 +502,11 @@ export default new ${migrationClassName}();
       return;
     }
     
-    // 1. Find all model files
+    // 1. Find all model files (excluding the shared BaseModel, which isn't a real table)
     const files = fs.readdirSync(this.modelsDir).filter(
-      f => f.endsWith('.ts') && f !== 'index.ts'
+      f => f.endsWith('.ts') && f !== 'index.ts' && f !== 'BaseModel.ts'
     );
-    
+
     // 2. Parse all models to gather dependencies
     const modelNodes: { file: string, tableName: string, dependencies: string[] }[] = [];
     for (const file of files) {
@@ -480,7 +520,7 @@ export default new ${migrationClassName}();
         const dependencies: string[] = [];
         for (const assoc of associations) {
             const [fk, modelName] = assoc.split(':');
-            const targetTable = this.pluralize(modelName.toLowerCase());
+            const targetTable = this.resolveTableNameForModel(modelName);
             if (targetTable !== currentTableName) { // avoid self-dependencies
                 dependencies.push(targetTable);
             }

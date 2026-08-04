@@ -23,6 +23,13 @@ class Csrf {
    * Validate token on state-changing requests.
    */
   public handle = (req: Request, res: Response, next: NextFunction) => {
+    // Bearer-token requests (curl, Postman, future non-browser clients)
+    // can't have a cookie silently attached by a malicious page, so they're
+    // exempt — this check only bites cookie-authenticated browser requests.
+    if (req.headers.authorization?.startsWith('Bearer')) {
+      return next();
+    }
+
     if (this.safeMethods.includes(req.method)) {
       const token = crypto.randomBytes(32).toString('hex');
 

@@ -20,7 +20,10 @@ class UserController {
   public async store(req: Request, res: Response, next: NextFunction) {
     try {
       const user = await UserService.createUser(req.body);
-      return ApiResponse.success(res, user, 'User created successfully', 201);
+      // User.create() returns the full row — strip the (hashed) password so
+      // it never leaves the server in the response body.
+      const { password: _password, ...safe } = user.toJSON();
+      return ApiResponse.success(res, safe, 'User created successfully', 201);
     } catch (error) {
       next(error);
     }

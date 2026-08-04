@@ -10,7 +10,7 @@ class WebAuth {
   /**
    * Middleware to protect web routes and redirect to login if not authenticated.
    */
-  public async handle(req: Request, res: Response, next: NextFunction) {
+  public handle = async (req: Request, res: Response, next: NextFunction) => {
     const accessToken = req.cookies?.access_token;
     const refreshToken = req.cookies?.refresh_token;
 
@@ -35,13 +35,13 @@ class WebAuth {
       res.clearCookie('access_token');
       return res.redirect('/login');
     }
-  }
+  };
 
   /**
    * Middleware to detect the user but allow the request to continue.
    * Useful for public pages that need to know if a user is logged in.
    */
-  public async detect(req: Request, res: Response, next: NextFunction) {
+  public detect = async (req: Request, res: Response, next: NextFunction) => {
     const accessToken = req.cookies?.access_token;
     const refreshToken = req.cookies?.refresh_token;
 
@@ -88,7 +88,7 @@ class WebAuth {
       }
       next();
     }
-  }
+  };
 
   /**
    * Attempt to refresh the access token silently.

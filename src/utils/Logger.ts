@@ -2,6 +2,21 @@ import winston from 'winston';
 import path from 'path';
 import env from '../config/env.js';
 
+/**
+ * JSON.stringify replacer that breaks circular references (e.g. Sequelize
+ * connection errors whose `.parent`/`.original` link back to the client/pool).
+ */
+function safeStringify(value: unknown): string {
+  const seen = new WeakSet();
+  return JSON.stringify(value, (_key, val) => {
+    if (typeof val === 'object' && val !== null) {
+      if (seen.has(val)) return '[Circular]';
+      seen.add(val);
+    }
+    return val;
+  }, 2);
+}
+
 class Logger {
   private logger: winston.Logger;
 
@@ -39,7 +54,7 @@ class Logger {
         const time = `\x1b[90m[${timestamp}]\x1b[39m`;
         
         // Sometimes we pass metadata, let's format it if it's not empty, excluding 'timestamp' which is present in meta as well
-        const metaString = Object.keys(meta).length ? `\n\x1b[90m${JSON.stringify(meta, null, 2)}\x1b[39m` : '';
+        const metaString = Object.keys(meta).length ? `\n\x1b[90m${safeStringify(meta)}\x1b[39m` : '';
 
         return `${time} ${level}: ${message}${metaString}${stack ? `\n${stack}` : ''}`;
       });

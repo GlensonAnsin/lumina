@@ -3,6 +3,7 @@ import inertia from 'inertia-node';
 import fs from 'fs';
 import path from 'path';
 import env from '../config/env.js';
+import User from '../models/User.js';
 
 export default class InertiaMiddleware {
   public static handle(req: Request, res: Response, next: NextFunction): void {
@@ -54,7 +55,7 @@ export default class InertiaMiddleware {
         return template.replace('{{page}}', encodedPage);
     }, process.env.INERTIA_VERSION || '1.0.0');
 
-    return inertiaMiddleware(req, res, () => {
+    return inertiaMiddleware(req, res, async () => {
         // Add res.inertia helper to the response object
         res.inertia = (component: string, props: any = {}) => {
             req.Inertia.render({ component, props });
@@ -62,16 +63,27 @@ export default class InertiaMiddleware {
 
         // Add res.flash helper
         res.flash = (type: string, message: string) => {
-          res.cookie(`flash_${type}`, message, { 
-            httpOnly: true, 
+          res.cookie(`flash_${type}`, message, {
+            httpOnly: true,
             maxAge: 60000 // 1 minute is enough for a flash message
           });
         };
 
+        // The JWT only carries id/email/role — firstname/lastname/avatar
+        // live on the DB row, so pages that render the account dropdown
+        // need this looked up here to show a real name/photo on every load.
+        let authUser: any = null;
+        if (req.user) {
+          const user = await User.findByPk(req.user.id, {
+            attributes: ['id', 'firstname', 'lastname', 'email', 'role', 'avatar'],
+          });
+          authUser = user ? user.toJSON() : null;
+        }
+
         // Share Global Props
         req.Inertia.shareProps({
           auth: {
-            user: req.user || null,
+            user: authUser,
           },
           flash: {
             success: req.cookies?.flash_success || null,

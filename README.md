@@ -2,6 +2,8 @@
 
 A production-grade monolithic starter kit featuring Express, React, Vite, and Inertia.js. It boasts a fully Object-Oriented backend architecture, Singleton services, and type-safe database interactions powered by Sequelize ORM. Supports multiple databases including MySQL, PostgreSQL, MariaDB, and SQLite.
 
+> 📘 **New here?** This README is a reference doc. For a hands-on, step-by-step walkthrough (setup, auth, building a feature end-to-end, adding pages), see **[TUTORIAL.md](./TUTORIAL.md)**.
+
 ---
 
 ## 📋 Table of Contents

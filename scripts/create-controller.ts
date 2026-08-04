@@ -73,8 +73,14 @@ class ControllerGenerator {
     try {
       let content = fs.readFileSync(this.stubPath, 'utf-8');
 
-      // Replace Placeholder
+      // Derive the model/service names the stub also references, e.g.
+      // "ProductController" -> ModelName "Product", ServiceName "ProductService".
+      const modelName = this.controllerName.replace(/Controller$/, '');
+      const serviceName = `${modelName}Service`;
+
       content = content.replace(/{{ControllerName}}/g, this.controllerName);
+      content = content.replace(/{{ModelName}}/g, modelName);
+      content = content.replace(/{{ServiceName}}/g, serviceName);
 
       fs.writeFileSync(this.targetPath, content);
 

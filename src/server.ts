@@ -26,8 +26,17 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
   contentSecurityPolicy: env.NODE_ENV === 'production' ? undefined : false,
 }));
+// CORS_ORIGIN is comma-separated. In development, any localhost/127.0.0.1
+// origin is additionally allowed regardless of port, so dev tooling that
+// picks a random port (e.g. `flutter run -d chrome`) works out of the box.
+const corsOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim());
+const localhostOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 app.use(cors({
-  origin: env.CORS_ORIGIN,
+  origin: (origin, callback) => {
+    if (!origin || corsOrigins.includes(origin)) return callback(null, true);
+    if (env.NODE_ENV !== 'production' && localhostOrigin.test(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 app.use(compression());

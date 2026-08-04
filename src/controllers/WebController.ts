@@ -79,12 +79,29 @@ class WebController {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
-      return res.redirect('/users');
+      // '/users' is an API-only route — send authenticated users to the app root.
+      return res.redirect('/');
     } catch (error: any) {
-      return res.inertia('Auth/Login', { 
-        errors: { email: 'Invalid credentials' } 
+      return res.inertia('Auth/Login', {
+        errors: { email: 'Invalid credentials' }
       });
     }
+  }
+
+  /**
+   * Handle Logout — revokes the refresh token server-side (so it can't be
+   * replayed) and clears both session cookies. Doesn't require a valid
+   * access token: an expired/corrupt session should still be able to log out.
+   */
+  public async logout(req: Request, res: Response) {
+    const refreshToken = req.cookies?.refresh_token;
+    if (refreshToken) {
+      await AuthService.logout(refreshToken);
+    }
+
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    return res.redirect('/login');
   }
 }
 
